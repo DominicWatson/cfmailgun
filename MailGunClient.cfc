@@ -78,7 +78,11 @@
 				return result.id;
 			}
 
-			WriteDump( result ); abort;
+			_throw(
+				  type    = "unexpected"
+				, message = "Unexpected error processing mail send."
+				, detail  = "Expected an ID of successfully sent mail but instead received [#SerializeJson( result )#]"
+			);
 		</cfscript>
 	</cffunction>
 
@@ -125,21 +129,91 @@
 			</cfloop>
 		</cfhttp>
 
-		<cfreturn _processApiResponse( httpResult ) />
+		<cfreturn _processApiResponse( argumentCollection=httpResult ) />
 	</cffunction>
 
 	<cffunction name="_processApiResponse" access="private" returntype="any" output="false">
-		<cfargument name="response" type="struct" required="true" />
+		<cfargument name="filecontent" type="string" required="false" default="" />
+		<cfargument name="status_code" type="string" required="false" default="" />
+
 
 		<cfscript>
-			// TODO check status codes, etc.
+			_checkErrorStatusCodes( argumentCollection = arguments );
 
 			try {
-				return DeserializeJSON( arguments.response.fileContent );
+				return DeserializeJSON( arguments.fileContent );
+
 			} catch ( any e ) {
-				WriteDump( arguments.response ); abort;
+				_throw(
+					  type    = "unexpected"
+					, message = "Unexpected error processing MailGun API response."
+					, detail  = "MailGun response body: #arguments.fileContent#"
+				);
 			}
 	</cfscript>
+	</cffunction>
+
+	<cffunction name="_checkErrorStatusCodes" access="private" returntype="void" output="false">
+		<cfargument name="status_code" type="string" required="true" />
+		<cfargument name="filecontent" type="string" required="true" />
+
+		<cfscript>
+			var errorParams = {};
+			var deserialized = "";
+
+			if ( arguments.status_code NEQ 200 ) {
+				try {
+					deserialized = DeserializeJson( arguments.fileContent );
+				} catch ( any e ){}
+
+				if ( IsStruct( deserialized ) and StructKeyExists( deserialized, "message" ) ) {
+					errorParams.detail    = deserialized.message
+				} else {
+					errorParams.detail    = "MailGun response body: [#arguments.filecontent#]"
+				}
+
+				if ( Val( arguments.status_code ) ) {
+					errorParams.errorCode = arguments.status_code;
+				} else {
+					errorParams.errorCode = 500;
+				}
+
+				switch( arguments.status_code ) {
+					case 400:
+						errorParams.type    = "badrequest";
+						errorParams.message = "MailGun request failure. Often caused by bad or missing parameters. See detail for full MailGun response.";
+					break;
+
+					case 401:
+						errorParams.type    = "unauthorized";
+						errorParams.message = "MailGun authentication failure, i.e. a bad API Key was supplied";
+					break;
+
+					case 402:
+						errorParams.type    = "requestfailed";
+						errorParams.message = "MailGun request failed (unexpected)";
+					break;
+
+					case 404:
+						errorParams.type    = "resourcenotfound";
+						errorParams.message = "MailGun requested resource not found (404). This might be caused by an invalid domain or incorrectly programmed API call.";
+						errorParams.detail  = "";
+					break;
+
+					case 500: case 502: case 503: case 504:
+						errorParams.type    = "mailgun.server.error";
+						errorParams.message = "An unexpected error occurred on the MailGun server";
+					break;
+
+					default:
+						errorParams.type    = "unexpected";
+						errorParams.message = "An unexpted response was returned from the MailGun server";
+
+				}
+
+				_throw( argumentCollection = errorParams );
+			}
+		</cfscript>
 	</cffunction>
 
 	<cffunction name="_getRestUrl" access="private" returntype="string" output="false">
@@ -157,6 +231,15 @@
 
 			return restUrl;
 		</cfscript>
+	</cffunction>
+
+	<cffunction name="_throw" access="private" returntype="void" output="false">
+		<cfargument name="type" type="string" required="true" />
+		<cfargument name="message" type="string" required="false" default="" />
+		<cfargument name="detail" type="string" required="false" default="" />
+		<cfargument name="errorcode" type="numeric" required="false" default="500" />
+
+		<cfthrow type="cfmailgun.#arguments.type#" message="#arguments.message#" detail="#arguments.detail#" errorcode="#arguments.errorCode#" />
 	</cffunction>
 
 <!--- GETTERS AND SETTERS --->
