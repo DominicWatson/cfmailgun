@@ -111,6 +111,21 @@ component output=false {
 					, html    = "test html"
 				} );
 			} );
+
+			it( "should return ID from MailGun response", function(){
+				mailGunClient.$( "_restCall", { message="nice one, ta", id="a test" } );
+
+				var result = mailGunClient.sendMessage(
+					  from    = "test from"
+					, to      = "test to"
+					, subject = "test subject"
+					, text    = "test text"
+					, html    = "test html"
+					, domain  = "some.domain.com"
+				);
+
+				expect( result ).toBe( "a test" );
+			} );
 		} );
 	}
 
