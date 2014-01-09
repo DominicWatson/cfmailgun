@@ -44,14 +44,16 @@
 				, html    = arguments.html
 			};
 
-			postVars[ "o:testmode" ] = _getForceTestMode() or arguments.testMode;
-
 			if ( Len( Trim( arguments.cc ) ) ) {
 				postVars.cc = arguments.cc;
 			}
 
 			if ( Len( Trim( arguments.bcc ) ) ) {
 				postVars.bcc = arguments.bcc;
+			}
+
+			if ( _getForceTestMode() or arguments.testMode ) {
+				postVars[ "o:testmode" ] = "yes";
 			}
 
 			if ( ArrayLen( arguments.attachments ) ) {
@@ -143,7 +145,7 @@
 					, message = "Unexpected error processing MailGun API response. MailGun response body: [#arguments.fileContent#]"
 				);
 			}
-	</cfscript>
+		</cfscript>
 	</cffunction>
 
 	<cffunction name="_checkErrorStatusCodes" access="private" returntype="void" output="false">
@@ -234,7 +236,6 @@
 		<cfthrow type      = "cfmailgun.#arguments.type#"
 		         message   = "#arguments.message#"
 		         errorcode = "#arguments.errorCode#" />
-
 	</cffunction>
 
 <!--- GETTERS AND SETTERS --->

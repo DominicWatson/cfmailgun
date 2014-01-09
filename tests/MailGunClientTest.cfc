@@ -3,7 +3,7 @@ component output=false {
 	function beforeAll() output=false {
 		mailGunClient = new cfmailgun.MailGunClient(
 			  apiKey        = "ITDOESNOTMATTER_WE_WILL_MOCK_ANY_REAL_CALLS"
-			, forceTestMode = true
+			, defaultDomain = "test.domain.com"
 		);
 
 		mailGunClient.privateMethodRunner = privateMethodRunner;
@@ -12,6 +12,7 @@ component output=false {
 	}
 
 	function run() output=false {
+
 		describe( "API Response processing", function(){
 
 			it( "should return deserialized json from MailGun response", function(){
@@ -63,6 +64,53 @@ component output=false {
 				} ).toThrow( regex="this is a test" );
 			} );
 
+		} );
+
+		describe( "The SendMail() method", function(){
+			it( "should send a POST request to: /messages", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message="nice one, ta", id="some id" } );
+
+				mailGunClient.sendMessage(
+					  from    = "test from"
+					, to      = "test to"
+					, subject = "test subject"
+					, text    = "test text"
+					, html    = "test html"
+					, domain  = "some.domain.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/messages" );
+			} );
+
+			it ( "should send all required post vars to MailGun", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message="nice one, ta", id="some id" } );
+
+				mailGunClient.sendMessage(
+					  from    = "test from"
+					, to      = "test to"
+					, subject = "test subject"
+					, text    = "test text"
+					, html    = "test html"
+					, domain  = "some.domain.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: {} ).toBe( {
+					  from    = "test from"
+					, to      = "test to"
+					, subject = "test subject"
+					, text    = "test text"
+					, html    = "test html"
+				} );
+			} );
 		} );
 	}
 
