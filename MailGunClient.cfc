@@ -1,5 +1,9 @@
 <cfcomponent output="false">
 
+	<cfscript>
+		statusCodes = StructNew();
+	</cfscript>
+
 <!--- CONSTRUCTOR --->
 	<cffunction name="init" access="public" returntype="any" output="false">
 		<cfargument name="apiKey"        type="string"  required="true" />
@@ -11,7 +15,7 @@
 		<cfscript>
 			_setApiKey ( arguments.apiKey  );
 			_setDefaultDomain( arguments.defaultDomain );
-			_setForceTestMode( arguments.testMode );
+			_setForceTestMode( arguments.forceTestMode );
 			_setBaseUrl( arguments.baseUrl );
 			_setHttpTimeout( arguments.httpTimeout );
 
@@ -20,6 +24,63 @@
 	</cffunction>
 
 <!--- PUBLIC API METHODS --->
+	<cffunction name="sendMessage" access="public" returntype="string" output="false" hint="Attempts to send a message through the MailGun API - returns message if successul and throws an error otherwise">
+		<cfargument name="from"              type="string"  required="true" />
+		<cfargument name="to"                type="string"  required="true" />
+		<cfargument name="subject"           type="string"  required="true" />
+		<cfargument name="text"              type="string"  required="true" />
+		<cfargument name="html"              type="string"  required="true" />
+		<cfargument name="cc"                type="string"  required="false" default="" />
+		<cfargument name="bcc"               type="string"  required="false" default="" />
+		<cfargument name="attachments"       type="array"   required="false" default="#ArrayNew(1)#" />
+		<cfargument name="inlineAttachments" type="array"   required="false" default="#ArrayNew(1)#" />
+		<cfargument name="domain"            type="string"  required="false" default="#_getDefaultDomain()#" />
+		<cfargument name="testMode"          type="boolean" required="false" default="false" />
+
+		<cfscript>
+			var result   = "";
+			var files    = {};
+			var postVars = {
+				  from    = arguments.from
+				, to      = arguments.to
+				, subject = arguments.subject
+				, text    = arguments.text
+				, html    = arguments.html
+			};
+
+			postVars[ "o:testmode" ] = _getForceTestMode() or arguments.testMode;
+
+			if ( Len( Trim( arguments.cc ) ) ) {
+				postVars.cc = arguments.cc;
+			}
+
+			if ( Len( Trim( arguments.bcc ) ) ) {
+				postVars.bcc = arguments.bcc;
+			}
+
+			if ( ArrayLen( arguments.attachments ) ) {
+				files.attachment = arguments.attachments;
+			}
+
+			if ( ArrayLen( arguments.inlineAttachments ) ) {
+				files.inline = arguments.inlineAttachments;
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/messages"
+				, domain     = arguments.domain
+				, postVars   = postVars
+				, files      = files
+			);
+
+			if ( StructKeyExists( result, "id" ) ) {
+				return result.id;
+			}
+
+			WriteDump( result ); abort;
+		</cfscript>
+	</cffunction>
 
 
 
@@ -33,7 +94,7 @@
 
 		<cfset var httpResult = "" />
 		<cfset var key        = "" />
-		<cfset var arrayItem  = "" />
+		<cfset var i  = "" />
 
 		<cfhttp url       = "#_getRestUrl( arguments.uri, arguments.domain )#"
 		        method    = "#arguments.httpMethod#"
@@ -45,8 +106,8 @@
 
 			<cfloop collection="#arguments.postVars#" item="key">
 				<cfif IsArray( arguments.postVars[ key ] )>
-					<cfloop array="#arguments.postVars[ key ]#" index="arrayItem">
-						<cfhttpparam type="formfield" name="#key#" value="#arrayItem#" />
+					<cfloop from="1" to="#ArrayLen( arguments.postVars[ key ] )#" index="i">
+						<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ][ i ]#" />
 					</cfloop>
 				<cfelse>
 					<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ]#" />
@@ -55,16 +116,30 @@
 
 			<cfloop collection="#arguments.files#" item="key">
 				<cfif IsArray( arguments.files[ key ] )>
-					<cfloop array="#arguments.files[ key ]#" index="arrayItem">
-						<cfhttpparam type="file" name="#key#" value="#arrayItem#" />
+					<cfloop from="1" to="#ArrayLen( arguments.files[ key ] )#" index="i">
+						<cfhttpparam type="file" name="#key#" file="#arguments.files[ key ][i]#" />
 					</cfloop>
 				<cfelse>
-					<cfhttpparam type="file" name="#key#" value="#arguments.files[ key ]#" />
+					<cfhttpparam type="file" name="#key#" file="#arguments.files[ key ]#" />
 				</cfif>
 			</cfloop>
 		</cfhttp>
 
-		<cfreturn httpResult />
+		<cfreturn _processApiResponse( httpResult ) />
+	</cffunction>
+
+	<cffunction name="_processApiResponse" access="private" returntype="any" output="false">
+		<cfargument name="response" type="struct" required="true" />
+
+		<cfscript>
+			// TODO check status codes, etc.
+
+			try {
+				return DeserializeJSON( arguments.response.fileContent );
+			} catch ( any e ) {
+				WriteDump( arguments.response ); abort;
+			}
+	</cfscript>
 	</cffunction>
 
 	<cffunction name="_getRestUrl" access="private" returntype="string" output="false">
