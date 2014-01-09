@@ -76,8 +76,7 @@
 
 			_throw(
 				  type    = "unexpected"
-				, message = "Unexpected error processing mail send."
-				, detail  = "Expected an ID of successfully sent mail but instead received [#SerializeJson( result )#]"
+				, message = "Unexpected error processing mail send. Expected an ID of successfully sent mail but instead received [#SerializeJson( result )#]"
 			);
 		</cfscript>
 	</cffunction>
@@ -142,8 +141,7 @@
 			} catch ( any e ) {
 				_throw(
 					  type    = "unexpected"
-					, message = "Unexpected error processing MailGun API response."
-					, detail  = "MailGun response body: #arguments.fileContent#"
+					, message = "Unexpected error processing MailGun API response. MailGun response body: [#arguments.fileContent#]"
 				);
 			}
 	</cfscript>
@@ -158,14 +156,46 @@
 			var deserialized = "";
 
 			if ( arguments.status_code NEQ 200 ) {
+				switch( arguments.status_code ) {
+					case 400:
+						errorParams.type    = "badrequest";
+						errorParams.message = "MailGun request failure. Often caused by bad or missing parameters. See detail for full MailGun response. ";
+					break;
+
+					case 401:
+						errorParams.type    = "unauthorized";
+						errorParams.message = "MailGun authentication failure, i.e. a bad API Key was supplied. ";
+					break;
+
+					case 402:
+						errorParams.type    = "requestfailed";
+						errorParams.message = "MailGun request failed (unexpected). ";
+					break;
+
+					case 404:
+						errorParams.type    = "resourcenotfound";
+						errorParams.message = "MailGun requested resource not found (404). This might be caused by an invalid domain or incorrectly programmed API call. ";
+					break;
+
+					case 500: case 502: case 503: case 504:
+						errorParams.type    = "servererror";
+						errorParams.message = "An unexpected error occurred on the MailGun server. ";
+					break;
+
+					default:
+						errorParams.type    = "unexpected";
+						errorParams.message = "An unexpted response was returned from the MailGun server. ";
+
+				}
+
 				try {
 					deserialized = DeserializeJson( arguments.fileContent );
 				} catch ( any e ){}
 
 				if ( IsStruct( deserialized ) and StructKeyExists( deserialized, "message" ) ) {
-					errorParams.detail    = deserialized.message
+					errorParams.message &= deserialized.message
 				} else {
-					errorParams.detail    = "MailGun response body: [#arguments.filecontent#]"
+					errorParams.message &= "MailGun response body: [#arguments.filecontent#]"
 				}
 
 				if ( Val( arguments.status_code ) ) {
@@ -174,38 +204,6 @@
 					errorParams.errorCode = 500;
 				}
 
-				switch( arguments.status_code ) {
-					case 400:
-						errorParams.type    = "badrequest";
-						errorParams.message = "MailGun request failure. Often caused by bad or missing parameters. See detail for full MailGun response.";
-					break;
-
-					case 401:
-						errorParams.type    = "unauthorized";
-						errorParams.message = "MailGun authentication failure, i.e. a bad API Key was supplied";
-					break;
-
-					case 402:
-						errorParams.type    = "requestfailed";
-						errorParams.message = "MailGun request failed (unexpected)";
-					break;
-
-					case 404:
-						errorParams.type    = "resourcenotfound";
-						errorParams.message = "MailGun requested resource not found (404). This might be caused by an invalid domain or incorrectly programmed API call.";
-						errorParams.detail  = "";
-					break;
-
-					case 500: case 502: case 503: case 504:
-						errorParams.type    = "mailgun.server.error";
-						errorParams.message = "An unexpected error occurred on the MailGun server";
-					break;
-
-					default:
-						errorParams.type    = "unexpected";
-						errorParams.message = "An unexpted response was returned from the MailGun server";
-
-				}
 
 				_throw( argumentCollection = errorParams );
 			}
@@ -232,10 +230,12 @@
 	<cffunction name="_throw" access="private" returntype="void" output="false">
 		<cfargument name="type" type="string" required="true" />
 		<cfargument name="message" type="string" required="false" default="" />
-		<cfargument name="detail" type="string" required="false" default="" />
 		<cfargument name="errorcode" type="numeric" required="false" default="500" />
 
-		<cfthrow type="cfmailgun.#arguments.type#" message="#arguments.message#" detail="#arguments.detail#" errorcode="#arguments.errorCode#" />
+		<cfthrow type      = "cfmailgun.#arguments.type#"
+		         message   = "#arguments.message#"
+		         errorcode = "#arguments.errorCode#" />
+
 	</cffunction>
 
 <!--- GETTERS AND SETTERS --->
