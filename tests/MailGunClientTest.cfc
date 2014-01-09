@@ -66,7 +66,7 @@ component output=false {
 
 		} );
 
-		describe( "The SendMail() method", function(){
+		describe( "The SendMessage() method", function(){
 			it( "should send a POST request to: /messages", function(){
 				var callLog = "";
 
