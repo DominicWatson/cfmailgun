@@ -131,7 +131,6 @@
 		<cfargument name="filecontent" type="string" required="false" default="" />
 		<cfargument name="status_code" type="string" required="false" default="" />
 
-
 		<cfscript>
 			_checkErrorStatusCodes( argumentCollection = arguments );
 
