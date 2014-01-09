@@ -1,9 +1,5 @@
 <cfcomponent output="false">
 
-	<cfscript>
-		statusCodes = StructNew();
-	</cfscript>
-
 <!--- CONSTRUCTOR --->
 	<cffunction name="init" access="public" returntype="any" output="false">
 		<cfargument name="apiKey"        type="string"  required="true" />
