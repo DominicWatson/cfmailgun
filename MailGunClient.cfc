@@ -32,6 +32,15 @@
 		<cfargument name="inlineAttachments" type="array"   required="false" default="#ArrayNew(1)#" />
 		<cfargument name="domain"            type="string"  required="false" default="#_getDefaultDomain()#" />
 		<cfargument name="testMode"          type="boolean" required="false" default="false" />
+		<cfargument name="tags"              type="array"   required="false" default="#ArrayNew(1)#" />
+		<cfargument name="campaign"          type="string"  required="false" default="" />
+		<cfargument name="dkim"              type="string"  required="false" default="" />
+		<cfargument name="deliveryTime"      type="string"  required="false" default="" />
+		<cfargument name="tracking"          type="string"  required="false" default="" />
+		<cfargument name="clickTracking"     type="string"  required="false" default="" />
+		<cfargument name="openTracking"      type="string"  required="false" default="" />
+		<cfargument name="customHeaders"     type="struct"  required="false" default="#StructNew()#" />
+		<cfargument name="customVariables"   type="struct"  required="false" default="#StructNew()#" />
 
 		<cfscript>
 			var result   = "";
@@ -54,6 +63,44 @@
 
 			if ( _getForceTestMode() or arguments.testMode ) {
 				postVars[ "o:testmode" ] = "yes";
+			}
+
+			if ( ArrayLen( arguments.tags ) ) {
+				postVars[ "o:tag" ] = arguments.tags;
+			}
+
+			if ( Len( Trim( arguments.campaign ) ) ) {
+				postVars[ "o:campaign" ] = arguments.campaign;
+			}
+
+			if ( IsBoolean( arguments.dkim ) ) {
+				postVars[ "o:dkim" ] = _boolFormat( arguments.dkim );
+			}
+
+			if ( IsDate( arguments.deliveryTime ) ) {
+				postVars[ "o:deliverytime" ] = _dateFormat( arguments.deliveryTime );
+			}
+
+			if ( IsBoolean( arguments.tracking ) ) {
+				postVars[ "o:tracking" ] = _boolFormat( arguments.tracking );
+			}
+
+			if ( IsBoolean( arguments.clickTracking ) ) {
+				postVars[ "o:tracking-clicks" ] = _boolFormat( arguments.clickTracking );
+			} elseif( arguments.clickTracking eq "htmlonly" ) {
+				postVars[ "o:tracking-clicks" ] = "htmlonly";
+			}
+
+			if ( IsBoolean( arguments.openTracking ) ) {
+				postVars[ "o:tracking-opens" ] = _boolFormat( arguments.openTracking );
+			}
+
+			for( var key in arguments.customHeaders ){
+				postVars[ "h:X-#key#" ] = arguments.customHeaders[ key ];
+			}
+
+			for( var key in arguments.customVariables ){
+				postVars[ "v:#key#" ] = arguments.customVariables[ key ];
 			}
 
 			if ( ArrayLen( arguments.attachments ) ) {
@@ -236,6 +283,22 @@
 		<cfthrow type      = "cfmailgun.#arguments.type#"
 		         message   = "#arguments.message#"
 		         errorcode = "#arguments.errorCode#" />
+	</cffunction>
+
+	<cffunction name="_dateFormat" access="public" returntype="any" output="false">
+		<cfargument name="theDate" type="date" required="true" />
+
+		<cfscript>
+			var gmtDate = DateAdd( "s", GetTimeZoneInfo().UTCTotalOffset, theDate );
+
+			return DateFormat( gmtDate, "ddd, dd mmm yyyy" ) & " " & TimeFormat( gmtDate, "HH:mm:ss")  & " GMT";
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="_boolFormat" access="public" returntype="string" output="false">
+		<cfargument name="bool" type="boolean" required="true" />
+
+		<cfreturn arguments.bool ? "yes" : "no" />
 	</cffunction>
 
 <!--- GETTERS AND SETTERS --->

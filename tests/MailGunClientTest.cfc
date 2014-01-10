@@ -197,32 +197,52 @@ component output=false {
 				} );
 			} );
 
-			it( "should send optional post vars when specified as arguments", function(){
+			it( "should send all optional post vars when specified as arguments", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { message="nice one, ta", id="some new id" } );
 
 				mailGunClient.sendMessage(
-					  from      = "some test from"
-					, to        = "some test to"
-					, cc        = "test cc"
-					, bcc       = "test bcc"
-					, subject   = "some test subject"
-					, text      = "some test text"
-					, html      = "some test html"
-					, domain    = "some.domain.com"
+					  from            = "some test from"
+					, to              = "some test to"
+					, cc              = "test cc"
+					, bcc             = "test bcc"
+					, subject         = "some test subject"
+					, text            = "some test text"
+					, html            = "some test html"
+					, domain          = "some.domain.com"
+					, tags            = ["tag1","another tag"]
+					, campaign        = "campaign id"
+					, dkim            = true
+					, deliveryTime    = "2014-01-10 09:00"
+					, tracking        = false
+					, clickTracking   = "htmlonly"
+					, openTracking    = true
+					, customHeaders   = { Custom = "testing custom", AnotherCustom = "testing custom again" }
+					, customVariables = { someVariable = "a test variable", fubar="test" }
 				);
 
 				callLog = mailGunClient.$callLog();
 
 				expect( callLog._restCall[1].postVars ?: {} ).toBe( {
-					  from      = "some test from"
-					, to        = "some test to"
-					, cc        = "test cc"
-					, bcc       = "test bcc"
-					, subject   = "some test subject"
-					, text      = "some test text"
-					, html      = "some test html"
+					  from                = "some test from"
+					, to                  = "some test to"
+					, cc                  = "test cc"
+					, bcc                 = "test bcc"
+					, subject             = "some test subject"
+					, text                = "some test text"
+					, html                = "some test html"
+					, "o:tag"             = ["tag1","another tag"]
+					, "o:campaign"        = "campaign id"
+					, "o:dkim"            = "yes"
+					, "o:deliverytime"    = httpDateFormat( "2014-01-10 09:00" )
+					, "o:tracking"        = "no"
+					, "o:tracking-clicks" = "htmlonly"
+					, "o:tracking-opens"  = "yes"
+					, "h:X-Custom"        = "testing custom"
+					, "h:X-AnotherCustom" = "testing custom again"
+					, "v:someVariable"    = "a test variable"
+					, "v:fubar"           = "test"
 				} );
 			} );
 		} );
@@ -233,4 +253,11 @@ component output=false {
 	function privateMethodRunner( method, args ) output=false {
 		return this[method]( argumentCollection=args );
 	}
+
+	private function httpDateFormat( required date theDate ) output=false {
+		var dtGMT = DateAdd( "s", GetTimeZoneInfo().UTCTotalOffset, theDate );
+
+		return DateFormat( dtGMT, "ddd, dd mmm yyyy" ) & " " & TimeFormat( dtGMT, "HH:mm:ss")  & " GMT";
+	}
+
 }
