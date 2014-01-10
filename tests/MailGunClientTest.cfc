@@ -169,6 +169,62 @@ component output=false {
 				} );
 
 			} );
+
+			it( "should send 'o:testing' post var when test mode specified", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message="nice one, ta", id="some new id" } );
+
+				mailGunClient.sendMessage(
+					  from      = "some test from"
+					, to        = "some test to"
+					, subject   = "some test subject"
+					, text      = "some test text"
+					, html      = "some test html"
+					, testMode  = true
+					, domain    = "some.domain.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: {} ).toBe( {
+					  from         = "some test from"
+					, to           = "some test to"
+					, subject      = "some test subject"
+					, text         = "some test text"
+					, html         = "some test html"
+					, "o:testmode" = "yes"
+				} );
+			} );
+
+			it( "should send optional post vars when specified as arguments", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message="nice one, ta", id="some new id" } );
+
+				mailGunClient.sendMessage(
+					  from      = "some test from"
+					, to        = "some test to"
+					, cc        = "test cc"
+					, bcc       = "test bcc"
+					, subject   = "some test subject"
+					, text      = "some test text"
+					, html      = "some test html"
+					, domain    = "some.domain.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: {} ).toBe( {
+					  from      = "some test from"
+					, to        = "some test to"
+					, cc        = "test cc"
+					, bcc       = "test bcc"
+					, subject   = "some test subject"
+					, text      = "some test text"
+					, html      = "some test html"
+				} );
+			} );
 		} );
 	}
 
