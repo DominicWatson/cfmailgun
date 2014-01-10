@@ -112,7 +112,7 @@ component output=false {
 				} );
 			} );
 
-			it( "should return ID from MailGun response", function(){
+			it( "should return newly created message ID from MailGun response", function(){
 				mailGunClient.$( "_restCall", { message="nice one, ta", id="a test" } );
 
 				var result = mailGunClient.sendMessage(
@@ -125,6 +125,26 @@ component output=false {
 				);
 
 				expect( result ).toBe( "a test" );
+			} );
+
+			it ( "should throw a suitable error when no ID is returned in the MailGun response", function(){
+				mailGunClient.$( "_restCall", { message="nice one, ta - message queued" } );
+
+				expect( function(){
+
+					mailGunClient.sendMessage(
+						  from    = "test from"
+						, to      = "test to"
+						, subject = "test subject"
+						, text    = "test text"
+						, html    = "test html"
+						, domain  = "some.domain.com"
+					);
+
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "Unexpected error processing mail send\. Expected an ID of successfully sent mail but instead received \["
+				);
 			} );
 		} );
 	}
