@@ -131,7 +131,6 @@ component output=false {
 				mailGunClient.$( "_restCall", { message="nice one, ta - message queued" } );
 
 				expect( function(){
-
 					mailGunClient.sendMessage(
 						  from    = "test from"
 						, to      = "test to"
@@ -140,11 +139,35 @@ component output=false {
 						, html    = "test html"
 						, domain  = "some.domain.com"
 					);
-
 				} ).toThrow(
 					  type  = "cfmailgun.unexpected"
 					, regex = "Unexpected error processing mail send\. Expected an ID of successfully sent mail but instead received \["
 				);
+			} );
+
+			it( "should send attachments and inline attachments as files to MailGun", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message="nice one, ta", id="some new id" } );
+
+				mailGunClient.sendMessage(
+					  from              = "another test from"
+					, to                = "another test to"
+					, subject           = "another test subject"
+					, text              = "another test text"
+					, html              = "another test html"
+					, domain            = "another.domain.com"
+					, attachments       = [ "C:\somefile.txt", "Z:\files\yetanother.zip" ]
+					, inlineAttachments = [ "C:\pics\me.jpg", "D:\animated-log.gif", "C:\another.jpg" ]
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].files ?: {} ).toBe( {
+					  attachment = [ "C:\somefile.txt", "Z:\files\yetanother.zip" ]
+					, inline     = [ "C:\pics\me.jpg", "D:\animated-log.gif", "C:\another.jpg" ]
+				} );
+
 			} );
 		} );
 	}
