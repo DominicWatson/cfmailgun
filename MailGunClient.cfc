@@ -9,7 +9,7 @@
 		<cfargument name="httpTimeout"   type="numeric" required="false" default="60" />
 
 		<cfscript>
-			_setApiKey ( arguments.apiKey  );
+			_setApiKey( arguments.apiKey  );
 			_setDefaultDomain( arguments.defaultDomain );
 			_setForceTestMode( arguments.forceTestMode );
 			_setBaseUrl( arguments.baseUrl );
@@ -298,7 +298,7 @@
 	<cffunction name="_boolFormat" access="public" returntype="string" output="false">
 		<cfargument name="bool" type="boolean" required="true" />
 
-		<cfreturn arguments.bool ? "yes" : "no" />
+		<cfreturn LCase( YesNoFormat( arguments.bool ) ) />
 	</cffunction>
 
 <!--- GETTERS AND SETTERS --->
