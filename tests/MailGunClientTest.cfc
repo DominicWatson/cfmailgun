@@ -67,7 +67,7 @@ component output=false {
 		} );
 
 		describe( "The SendMessage() method", function(){
-			it( "should send a POST request to: /messages", function(){
+			it( "should send a POST request to: /(domain)/messages", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { message="nice one, ta", id="some id" } );
@@ -245,6 +245,75 @@ component output=false {
 					, "v:fubar"           = "test"
 				} );
 			} );
+		} );
+
+		describe( "The listCampaigns() method", function(){
+
+			it( "should send a GET request to: /(domain)/campaigns", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count=0, items=[] } );
+
+				mailGunClient.listCampaigns( domain = "some.domain.com" );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/campaigns" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "some.domain.com" );
+			} );
+
+			it( "should return total count and array of items from API call", function(){
+				var result     = "";
+				var mockResult = {
+					"total_count": 1,
+					"items": [{
+						"delivered_count": 924,
+						"name": "Sample",
+						"created_at": "Wed, 15 Feb 2012 11:31:17 GMT",
+						"clicked_count": 135,
+						"opened_count": 301,
+						"submitted_count": 998,
+						"unsubscribed_count": 44,
+						"bounced_count": 20,
+						"complained_count": 3,
+						"id": "1",
+						"dropped_count": 13
+					}
+				]}
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.listCampaigns( domain="some.domain.com" );
+
+				expect( result ).toBe( mockResult );
+			} );
+
+			it( "should send optional limit and skip get vars when passed", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count : 0, items : [] } );
+
+				mailGunClient.listCampaigns( domain = "some.domain.com", limit=50, skip=3 );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars.limit ?: "" ).toBe( 50 );
+				expect( callLog._restCall[1].getVars.skip  ?: "" ).toBe( 3  );
+			} );
+
+			it( "should throw suitable error when API return response is not in expected format", function(){
+				mailGunClient.$( "_restCall", { total_count : 5 } );
+
+				expect( function(){
+					mailGunClient.listCampaigns();
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "Expected response to contain \[total_count\] and \[items\] keys\. Instead, receieved: \["
+				);
+
+			} );
+
 		} );
 	}
 

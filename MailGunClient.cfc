@@ -19,7 +19,7 @@
 		</cfscript>
 	</cffunction>
 
-<!--- PUBLIC API METHODS --->
+<!--- MESSAGES --->
 	<cffunction name="sendMessage" access="public" returntype="string" output="false" hint="Attempts to send a message through the MailGun API - returns message if successul and throws an error otherwise">
 		<cfargument name="from"              type="string"  required="true" />
 		<cfargument name="to"                type="string"  required="true" />
@@ -130,6 +130,41 @@
 		</cfscript>
 	</cffunction>
 
+<!--- CAMPAIGNS --->
+	<cffunction name="listCampaigns" access="public" returntype="struct" output="false">
+		<cfargument name="domain" type="string"  required="false" default="#_getDefaultDomain()#" />
+		<cfargument name="limit"  type="numeric" required="false" />
+		<cfargument name="skip"   type="numeric" required="false" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( StructKeyExists( arguments, "limit" ) ) {
+				getVars.limit = arguments.limit;
+			}
+			if ( StructKeyExists( arguments, "skip" ) ) {
+				getVars.skip = arguments.skip;
+			}
+
+			result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/campaigns"
+				, domain     = arguments.domain
+				, getVars    = getVars
+			);
+
+			if ( StructKeyExists( result, "total_count" ) and StructKeyExists( result, "items" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, errorCode = 500
+				, message   = "Expected response to contain [total_count] and [items] keys. Instead, receieved: [#SerializeJson( result )#]" )
+
+		</cfscript>
+	</cffunction>
 
 
 <!--- PRIVATE HELPERS --->
@@ -138,6 +173,7 @@
 		<cfargument name="uri"        type="string" required="true" />
 		<cfargument name="domain"     type="string" required="false" default="" />
 		<cfargument name="postVars"   type="struct" required="false" default="#StructNew()#" />
+		<cfargument name="getVars"    type="struct" required="false" default="#StructNew()#" />
 		<cfargument name="files"      type="struct" required="false" default="#StructNew()#" />
 
 		<cfset var httpResult = "" />
@@ -159,6 +195,16 @@
 					</cfloop>
 				<cfelse>
 					<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ]#" />
+				</cfif>
+			</cfloop>
+
+			<cfloop collection="#arguments.getVars#" item="key">
+				<cfif IsArray( arguments.getVars[ key ] )>
+					<cfloop from="1" to="#ArrayLen( arguments.getVars[ key ] )#" index="i">
+						<cfhttpparam type="url" name="#key#" value="#arguments.getVars[ key ][ i ]#" />
+					</cfloop>
+				<cfelse>
+					<cfhttpparam type="url" name="#key#" value="#arguments.getVars[ key ]#" />
 				</cfif>
 			</cfloop>
 
