@@ -31,25 +31,207 @@
 			<section>
 				<div id="title">
 					<h1>CfMailGun</h1>
-					<p>CFML Client for the MailGun API (http://documentation.mailgun.com/api_reference.html)</p>
+					<p>A CFML Client for the <a href="http://documentation.mailgun.com/api_reference.html">MailGun API</a></p>
 					<hr>
 					<span class="credits left">Project maintained by <a href="https://github.com/DominicWatson">DominicWatson</a></span>
 					<span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
 				</div>
 
-				<h1>
-					<a name="cfmailgun---cfml-client-for-the-mailgun-api" class="anchor" href="#cfmailgun---cfml-client-for-the-mailgun-api"><span class="octicon octicon-link"></span></a>
-					CfMailGun - CFML Client for the MailGun API
-				</h1>
+				<p>This CFML client enables straightforward interaction with the <a href="http://www.mailgun.com/">MailGun</a> API in your <a href="http://getrailo.org">Railo</a>, <a href="http://openbd.org/‎">Open BlueDragon</a> and <a href="http://www.adobe.com/uk/products/coldfusion-family.html‎">Adobe ColdFusion</a> applications.</p>
 
-				<p>This CFML client is a simple, single CFC to enable you to easily interact with the MailGun API in your CFML applications (Railo, ColdFusion, Open BlueDragon).</p>
+				<p>The client is implemented as a single CFC. Instantiating the component can be achieved minimally with:</p>
 
-				<p><strong>It is currently a work in progress and pre-alpha. First official release due soon.</strong></p>
-			</section>
+				<pre>mailGunClient = new MailGunClient( apiKey = myPrivateApiKey );</pre>
 
-			<section>
-				<h1>Useage</h1>
-				<p> Documentation to follow...</p>
+				<h1>API Reference</h1>
+				<h2>Instantiating the client</h2>
+				<div class="method">
+					<h3>init()</h3>
+					<p> Instantiates the API client. The client is designed as a singleton, so you are safe to store the instance in a permanent scope (i.e. the application scope). <strong class="returns">Returns</strong> the newly instantiated instance.
+					<h4>Input arguments</h4>
+
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">apiKey</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Private API Key of your MailGun account</td>
+							</tr>
+							<tr>
+								<td class="argument-name">defaultDomain</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>Optional, default domain to use in all API calls that pertain to a domain. Particulary useful if the instance is only intended to be used with a single domain.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">baseUrl</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>Optional, default is https://api.mailgun.net/v2. Should the endpoint change, you can pass it here (i.e. new version or mirrored service)</td>
+							</tr>
+							<tr>
+								<td class="argument-name">forceTestMode</td>
+								<td>boolean</td>
+								<td class="argument-required">No</td>
+								<td>Optional, default is false. Whether or not to force all relevant API calls into test mode. This can be useful for staging environments when you want to ensure that no emails are accidentally sent to third parties, for example.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">httpTimeout</td>
+								<td>numeric</td>
+								<td class="argument-required">No</td>
+								<td>Optional, default 60. Maximum time in seconds to wait for a response from REST API calls.</td>
+							</tr>
+						</tbody>
+					</table>
+
+				</div>
+				<h2>Messages</h2>
+				<div class="method">
+					<h3>SendMessage()</h3>
+					<p> Sends a message by assembling it from the components. <strong class="returns">Returns</strong> the ID of the sent message if successful.</p>
+					<h4>Input arguments</h4>
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">domain</td>
+								<td>string</td>
+								<td class="argument-required">Yes/No</td>
+								<td>Mailgun registered domain through which you want to send the message. If the client has been instantiated with a default domain, this argument is optional, otherwise required.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">from</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Email address for From header</td>
+							</tr>
+							<tr>
+								<td class="argument-name">to</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Email address of the recipient(s). Example: <code>Bob &lt;bob@host.com&gt;</code>. You can use commas to separate multiple recipients.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">cc</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>Same as <code>To</code> but for <code>Cc</code></td>
+							</tr>
+							<tr>
+								<td class="argument-name">bcc</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>Same as <code>To</code> but for <code>Cc</code></td>
+							</tr>
+							<tr>
+								<td class="argument-name">subject</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Message subject</td>
+							</tr>
+							<tr>
+								<td class="argument-name">text</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Body of the message. (text version)</td>
+							</tr>
+							<tr>
+								<td class="argument-name">html</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Body of the message. (HTML version)</td>
+							</tr>
+							<tr>
+								<td class="argument-name">attachments</td>
+								<td>array</td>
+								<td class="argument-required">No</td>
+								<td>Array of file paths to be added as attachments to the message</td>
+							</tr>
+							<tr>
+								<td class="argument-name">inlineAttachments</td>
+								<td>array</td>
+								<td class="argument-required">No</td>
+								<td>Array of file paths to be added as <em>inline</em> attachments to the message. Can be used to send inline images (see <a href="http://documentation.mailgun.com/user_manual.html#inline-image">example</a>).</td>
+							</tr>
+							<tr>
+								<td class="argument-name">testMode</td>
+								<td>boolean</td>
+								<td class="argument-required">No</td>
+								<td>Whether or not to send in test mode (MailGun will receive messages but not forward them on). Default is <code>false</code>. However, if the client has been instantiated with the <code>forceTestMode</code> option, then the value of this argument will be ignored and the message will always be sent in test mode.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">tags</td>
+								<td>array</td>
+								<td class="argument-required">No</td>
+								<td>Array of labels with which to "tag" the message. These can be used in reporting, etc.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">campaign</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>ID string of the MailGun campaign to associate this message with.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">dkim</td>
+								<td>boolean</td>
+								<td class="argument-required">No</td>
+								<td>Enables/disables DKIM signatures on per-message basis.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">deliveryTime</td>
+								<td>date</td>
+								<td class="argument-required">No</td>
+								<td>Desired time of delivery. Note: Messages can be scheduled for a maximum of 3 days in the future.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">tracking</td>
+								<td>boolean</td>
+								<td class="argument-required">No</td>
+								<td>Toggles tracking on a per-message basis</td>
+							</tr>
+							<tr>
+								<td class="argument-name">clickTracking</td>
+								<td>boolean / string</td>
+								<td class="argument-required">No</td>
+								<td>Toggles clicks tracking on a per-message basis. Has higher priority than domain-level setting. Pass true/false or "htmlOnly".</td>
+							</tr>
+							<tr>
+								<td class="argument-name">openTracking</td>
+								<td>boolean</td>
+								<td class="argument-required">No</td>
+								<td>Toggles opens tracking on a per-message basis. Has higher priority than domain-level setting.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">customHeaders</td>
+								<td>struct</td>
+								<td class="argument-required">No</td>
+								<td>A structure of custom header key value pairs. These headers will be sent along with the message. e.g. if you send <code>{ cmsId = 4573457 }</code>, an email header named <code>X-cmsId</code> will be sent with a value of <code>4573457</code></td>
+							</tr>
+							<tr>
+								<td class="argument-name">customVariables</td>
+								<td>struct</td>
+								<td class="argument-required">No</td>
+								<td>A structure of arbitrary custom data to attach to the message. This data will be sent as JSON in a mail header named <code>X-Mailgun-Variables</code> and will also be forwarded on to any Webhooks, etc. pertaining to the message</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</section>
 		</div>
 
