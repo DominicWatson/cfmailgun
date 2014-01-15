@@ -422,6 +422,28 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="deleteMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address" type="string" required="true" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "DELETE"
+				, uri        = "/lists/#arguments.address#"
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "address" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "DeleteMailingList() response was an in an unexpected format. Expected success message and list address. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
 		<cfargument name="httpMethod" type="string" required="true" />
