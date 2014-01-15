@@ -471,7 +471,15 @@
 				, getVars    = getVars
 			);
 
-			return result;
+			if ( IsStruct( result ) and StructKeyExists( result, "total_count" ) and StructKeyExists( result, "items" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "ListMailingListMembers() response was an in an unexpected format. Expected list of addresses. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
 		</cfscript>
 	</cffunction>
 

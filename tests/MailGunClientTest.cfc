@@ -855,54 +855,20 @@ component output=false {
 				expect( callLog._restCall[1].getVars.skip  ?: "" ).toBe( 3  );
 				expect( callLog._restCall[1].getVars.subscribed  ?: "" ).toBe( "yes" );
 			} );
-		});
 
-	}
-
-/*
-
-			it( "should return total count and array of items from API call", function(){
-				var result     = "";
-				var mockResult = {
-					"total_count": 1,
-					"items": [{
-						"delivered_count": 924,
-						"name": "Sample",
-						"created_at": "Wed, 15 Feb 2012 11:31:17 GMT",
-						"clicked_count": 135,
-						"opened_count": 301,
-						"submitted_count": 998,
-						"unsubscribed_count": 44,
-						"bounced_count": 20,
-						"complained_count": 3,
-						"id": "1",
-						"dropped_count": 13
-					}
-				]}
-
-				mailGunClient.$( "_restCall", mockResult );
-
-				result = mailGunClient.listCampaigns( domain="some.domain.com" );
-
-				expect( result ).toBe( mockResult );
-			} );
-
-
-
-			it( "should throw suitable error when API return response is not in expected format", function(){
-				mailGunClient.$( "_restCall", { total_count : 5 } );
+			it( "should throw an informative error when response is not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
 
 				expect( function(){
-					mailGunClient.listCampaigns();
+					mailGunClient.listMailingListMembers( address="test@list.net", limit=50, skip=3, subscribed=true );
 				} ).toThrow(
 					  type  = "cfmailgun.unexpected"
-					, regex = "Expected response to contain \[total_count\] and \[items\] keys\. Instead, receieved: \["
+					, regex = "ListMailingListMembers\(\) response was an in an unexpected format\. Expected list of addresses\. Instead, recieved\: \["
+
 				);
-
-			} );
-
-		} );
-*/
+			});
+		});
+	}
 
 // helper to test private methods
 	function privateMethodRunner( method, args ) output=false {
