@@ -898,6 +898,80 @@ component output=false {
 			});
 
 		});
+
+		describe( "The createMailingListMember() method", function(){
+
+			it( "should send a POST request to /lists/(list_address)/members", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member added", member={ address="me@me.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@list.com/members" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+
+			it( "should send required [address] argument as a post variable", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member added", member={ address="me@me.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { address="me@me.com" } );
+			} );
+
+			it( "should send optional [name], [vars], [subscribed] and [upsert] arguments as post variables when passed in and not empty", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member added", member={ address="me@me.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+					, name          = "MiMi Moore"
+					, vars          = { var1="hell", var2="o world" }
+					, subscribed    = false
+					, upsert        = true
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { address="me@me.com", name="MiMi Moore", vars="#SerializeJson({ var1="hell", var2="o world" })#", subscribed="no", upsert="yes" } );
+			} );
+
+
+			it( "should throw a suitable error when response in the wrong format", function(){
+				mailGunClient.$( "_restCall", { bade = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+					, name          = "MiMi Moore"
+					, vars          = { var1="hell", var2="o world" }
+					, subscribed    = false
+					, upsert        = true
+				);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "CreateMailingListMember\(\) response was an in an unexpected format\. Expected success message and member detail\. Instead, recieved\: \["
+				);
+			} );
+		} );
 	}
 
 // helper to test private methods

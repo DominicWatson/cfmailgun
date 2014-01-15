@@ -494,7 +494,6 @@
 				, domain     = ""
 			);
 
-
 			if ( IsStruct( result ) and StructKeyExists( result, "member" ) ) {
 				return result;
 			}
@@ -502,6 +501,51 @@
 			_throw(
 				  type      = "unexpected"
 				, message   = "GetMailingListMember() response was an in an unexpected format. Expected member structure. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="createMailingListMember" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress"   type="string"  required="true" />
+		<cfargument name="memberAddress" type="string"  required="true" />
+		<cfargument name="name"          type="string"  required="false" default="" />
+		<cfargument name="vars"          type="struct"  required="false" />
+		<cfargument name="subscribed"    type="boolean" required="false" />
+		<cfargument name="upsert"        type="boolean" required="false" />
+
+		<cfscript>
+			var result   = "";
+			var postVars = { address = arguments.memberAddress };
+
+			if ( Len( Trim( arguments.name ) ) ) {
+				postVars[ "name" ] = arguments.name;
+			}
+
+			if ( StructKeyExists( arguments, "vars" ) ) {
+				postVars[ "vars" ] = SerializeJson( arguments.vars );
+			}
+			if ( StructKeyExists( arguments, "subscribed" ) ) {
+				postVars[ "subscribed" ] = _boolFormat( arguments.subscribed );
+			}
+			if ( StructKeyExists( arguments, "upsert" ) ) {
+				postVars[ "upsert" ] = _boolFormat( arguments.upsert );
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/lists/#arguments.listAddress#/members"
+				, postVars   = postVars
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "member" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "CreateMailingListMember() response was an in an unexpected format. Expected success message and member detail. Instead, recieved: [#SerializeJson( result )#]"
 				, errorCode = 500
 			);
 		</cfscript>
