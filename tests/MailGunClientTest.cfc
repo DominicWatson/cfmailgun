@@ -537,7 +537,7 @@ component output=false {
 
 		describe( "The listMailingLists() method", function(){
 
-			it( "should send a GET request to: /(domain)/lists", function(){
+			it( "should send a GET request to: /lists", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { total_count=0, items=[] } );
@@ -595,6 +595,74 @@ component output=false {
 					, regex = "Expected response to contain \[total_count\] and \[items\] keys\. Instead, receieved: \["
 				);
 
+			} );
+
+		} );
+
+		describe( "The createMailingList() method", function(){
+
+			it( "should send a post request to /lists", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List created", list = {} } );
+
+				mailGunClient.createMailingList(
+					address = "test@test.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should send required [address] argument as a post variable", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List created", list = {} } );
+
+				mailGunClient.createMailingList(
+					address = "test@test.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { address="test@test.com" } );
+			} );
+
+			it( "should send optional [name], [access_level] and [description] arguments as post variables when passed in and not empty", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List created", list = {} } );
+
+				mailGunClient.createMailingList(
+					  domain       = "my.domain.net"
+					, address      = "test@test.com"
+					, name         = "I like testing lists, really"
+					, description  = "this is a description"
+					, accessLevel  = "test"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( {
+					  address      = "test@test.com"
+					, name         = "I like testing lists, really"
+					, description  = "this is a description"
+					, access_level = "test"
+				 } );
+			} );
+
+			it( "should throw a suitable error when response in the wrong format", function(){
+				mailGunClient.$( "_restCall", { bade = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.createMailingList( "list@test.com" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "createMailingList\(\) response was an in an unexpected format\. Expected success message and list detail\. Instead, recieved\: \["
+				);
 			} );
 
 		} );

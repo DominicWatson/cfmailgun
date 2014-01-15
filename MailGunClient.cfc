@@ -316,6 +316,45 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="createMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address"     type="string" required="true" />
+		<cfargument name="name"        type="string" required="false" default="" />
+		<cfargument name="description" type="string" required="false" default="" />
+		<cfargument name="accessLevel" type="string" required="false" default="" />
+
+		<cfscript>
+			var postVars = { address = arguments.address };
+			var result   = "";
+
+			if ( Len( Trim( arguments.name ) ) ) {
+				postVars[ "name" ] = arguments.name;
+			}
+			if ( Len( Trim( arguments.description ) ) ) {
+				postVars[ "description" ] = arguments.description;
+			}
+			if ( Len( Trim( arguments.accessLevel ) ) ) {
+				postVars[ "access_level" ] = arguments.accessLevel;
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/lists"
+				, domain     = ""
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "list" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "CreateMailingList() response was an in an unexpected format. Expected success message and list detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
 		<cfargument name="httpMethod" type="string" required="true" />
