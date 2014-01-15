@@ -221,6 +221,43 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="updateCampaign" access="public" returntype="struct" output="false">
+		<cfargument name="id"     type="string" required="true" />
+		<cfargument name="name"   type="string" required="false" />
+		<cfargument name="newId"  type="string" required="false" default="" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var result = "";
+			var postVars = {};
+
+			if ( Len( Trim( arguments.name ) ) ) {
+				postVars.name = arguments.name;
+			}
+
+			if ( Len( Trim( arguments.newId ) ) ) {
+				postVars.id = arguments.newId;
+			}
+
+			result = _restCall(
+				  httpMethod = "PUT"
+				, uri        = "/campaigns/#arguments.id#"
+				, domain     = arguments.domain
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "campaign" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "UpdateCampaign() response was an in an unexpected format. Expected success message and campaign detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
 
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
@@ -247,6 +284,7 @@
 				<cfif IsArray( arguments.postVars[ key ] )>
 					<cfloop from="1" to="#ArrayLen( arguments.postVars[ key ] )#" index="i">
 						<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ][ i ]#" />
+						<cfhttpparam type name="#key#" value="#arguments.postVars[ key ][ i ]#" />
 					</cfloop>
 				<cfelse>
 					<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ]#" />

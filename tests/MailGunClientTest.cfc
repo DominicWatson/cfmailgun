@@ -419,6 +419,88 @@ component output=false {
 			} );
 
 		} );
+
+		describe( "The updateCampaign() method", function(){
+			it( "should send a a PUT request to /(domain)/campaigns/(id)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
+
+				mailGunClient.updateCampaign(
+					  domain = "my.domain.net"
+					, id     = "someCampaign"
+					, name   = "This is my campaign"
+					, newId  = "ANewId"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "PUT" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/campaigns/someCampaign" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "my.domain.net" );
+			} );
+
+			it( "should send the optional [name] post variable when supplied", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
+
+				mailGunClient.updateCampaign(
+					  domain = "my.domain.net"
+					, id     = "someCampaign"
+					, name   = "This is my campaign"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { name = "This is my campaign" } );
+			} );
+
+			it( "should send the optional [id] post variable when [newId] argument supplied", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
+
+				mailGunClient.updateCampaign(
+					  domain = "my.domain.net"
+					, id     = "someCampaign"
+					, newId  = "aNewId"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { id = "aNewId" } );
+			} );
+
+			it( "should send the optional [id] and [name] post variable when both arguments supplied", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
+
+				mailGunClient.updateCampaign(
+					  domain = "my.domain.net"
+					, id     = "someCampaign"
+					, name   = "my name"
+					, newId  = "myId"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { id = "myId", name = "my name" } );
+			} );
+
+			it( "should throw a suitable error when response is not in the expected format.", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.updateCampaign( id="blah", name="Some new campaign" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "UpdateCampaign\(\) response was an in an unexpected format\. Expected success message and campaign detail\. Instead, recieved\: \["
+
+				);
+			} );
+		} );
 	}
 
 
