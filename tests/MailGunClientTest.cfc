@@ -356,6 +356,69 @@ component output=false {
 			} );
 
 		} );
+
+		describe( "The createCampaign() method", function(){
+
+			it( "should send a post request to /(domain)/campaigns", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign created", campaign = {} } );
+
+				mailGunClient.createCampaign(
+					  domain = "my.domain.net"
+					, name   = "This is my campaign"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/campaigns" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "my.domain.net" );
+			} );
+
+			it( "should send required [name] argument as a post variable", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign created", campaign = {} } );
+
+				mailGunClient.createCampaign(
+					  domain = "my.domain.net"
+					, name   = "This is my campaign"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { name="This is my campaign" } );
+			} );
+
+			it( "should send optional [id] argument as a post variable when passed in and not empty", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign created", campaign = {} } );
+
+				mailGunClient.createCampaign(
+					  domain = "my.domain.net"
+					, name   = "I like testing campaigns, really"
+					, id     = "someId"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { name = "I like testing campaigns, really", id = "someId" } );
+			} );
+
+			it( "should throw a suitable error when response in the wrong format", function(){
+				mailGunClient.$( "_restCall", { bade = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.createCampaign( "Some new campaign" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "CreateCampaign\(\) response was an in an unexpected format\. Expected success message and campaign detail\. Instead, recieved\: \["
+				);
+			} );
+
+		} );
 	}
 
 

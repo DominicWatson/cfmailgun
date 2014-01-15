@@ -189,6 +189,38 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="createCampaign" access="public" returntype="any" output="false">
+		<cfargument name="name"   type="string" required="true" />
+		<cfargument name="id"     type="string" required="false" default="" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var postVars = { name=arguments.name }
+			var result   = "";
+
+			if ( Len( Trim( arguments.id ) ) ) {
+				postVars[ "id" ] = arguments.id;
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/campaigns"
+				, domain     = arguments.domain
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "campaign" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "CreateCampaign() response was an in an unexpected format. Expected success message and campaign detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
 
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
