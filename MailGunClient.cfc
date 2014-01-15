@@ -19,7 +19,7 @@
 		</cfscript>
 	</cffunction>
 
-<!--- PUBLIC API METHODS --->
+<!--- MESSAGES --->
 	<cffunction name="sendMessage" access="public" returntype="string" output="false" hint="Attempts to send a message through the MailGun API - returns message if successul and throws an error otherwise">
 		<cfargument name="from"              type="string"  required="true" />
 		<cfargument name="to"                type="string"  required="true" />
@@ -130,6 +130,156 @@
 		</cfscript>
 	</cffunction>
 
+<!--- CAMPAIGNS --->
+	<cffunction name="listCampaigns" access="public" returntype="struct" output="false">
+		<cfargument name="domain" type="string"  required="false" default="#_getDefaultDomain()#" />
+		<cfargument name="limit"  type="numeric" required="false" />
+		<cfargument name="skip"   type="numeric" required="false" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( StructKeyExists( arguments, "limit" ) ) {
+				getVars.limit = arguments.limit;
+			}
+			if ( StructKeyExists( arguments, "skip" ) ) {
+				getVars.skip = arguments.skip;
+			}
+
+			result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/campaigns"
+				, domain     = arguments.domain
+				, getVars    = getVars
+			);
+
+			if ( StructKeyExists( result, "total_count" ) and StructKeyExists( result, "items" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, errorCode = 500
+				, message   = "Expected response to contain [total_count] and [items] keys. Instead, receieved: [#SerializeJson( result )#]" )
+
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="getCampaign" access="public" returntype="struct" output="false">
+		<cfargument name="id"     type="string" required="true" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/campaigns/#arguments.id#"
+				, domain     = arguments.domain
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "id" ) and StructKeyExists( result, "name" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "Unexpected mailgun response. Expected a campaign object (structure) but received: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="createCampaign" access="public" returntype="any" output="false">
+		<cfargument name="name"   type="string" required="true" />
+		<cfargument name="id"     type="string" required="false" default="" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var postVars = { name=arguments.name }
+			var result   = "";
+
+			if ( Len( Trim( arguments.id ) ) ) {
+				postVars[ "id" ] = arguments.id;
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/campaigns"
+				, domain     = arguments.domain
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "campaign" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "CreateCampaign() response was an in an unexpected format. Expected success message and campaign detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="updateCampaign" access="public" returntype="struct" output="false">
+		<cfargument name="id"     type="string" required="true" />
+		<cfargument name="name"   type="string" required="false" />
+		<cfargument name="newId"  type="string" required="false" default="" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( Len( Trim( arguments.name ) ) ) {
+				getVars.name = arguments.name;
+			}
+
+			if ( Len( Trim( arguments.newId ) ) ) {
+				getVars.id = arguments.newId;
+			}
+
+			result = _restCall(
+				  httpMethod = "PUT"
+				, uri        = "/campaigns/#arguments.id#"
+				, domain     = arguments.domain
+				, getVars    = getVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "campaign" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "UpdateCampaign() response was an in an unexpected format. Expected success message and campaign detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="deleteCampaign" access="public" returntype="struct" output="false">
+		<cfargument name="id"     type="string" required="true" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "DELETE"
+				, uri        = "/campaigns/#arguments.id#"
+				, domain     = arguments.domain
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "id" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "DeleteCampaign() response was an in an unexpected format. Expected success message and campaign id. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
 
 
 <!--- PRIVATE HELPERS --->
@@ -138,6 +288,7 @@
 		<cfargument name="uri"        type="string" required="true" />
 		<cfargument name="domain"     type="string" required="false" default="" />
 		<cfargument name="postVars"   type="struct" required="false" default="#StructNew()#" />
+		<cfargument name="getVars"    type="struct" required="false" default="#StructNew()#" />
 		<cfargument name="files"      type="struct" required="false" default="#StructNew()#" />
 
 		<cfset var httpResult = "" />
@@ -156,9 +307,20 @@
 				<cfif IsArray( arguments.postVars[ key ] )>
 					<cfloop from="1" to="#ArrayLen( arguments.postVars[ key ] )#" index="i">
 						<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ][ i ]#" />
+						<cfhttpparam type name="#key#" value="#arguments.postVars[ key ][ i ]#" />
 					</cfloop>
 				<cfelse>
 					<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ]#" />
+				</cfif>
+			</cfloop>
+
+			<cfloop collection="#arguments.getVars#" item="key">
+				<cfif IsArray( arguments.getVars[ key ] )>
+					<cfloop from="1" to="#ArrayLen( arguments.getVars[ key ] )#" index="i">
+						<cfhttpparam type="url" name="#key#" value="#arguments.getVars[ key ][ i ]#" />
+					</cfloop>
+				<cfelse>
+					<cfhttpparam type="url" name="#key#" value="#arguments.getVars[ key ]#" />
 				</cfif>
 			</cfloop>
 
