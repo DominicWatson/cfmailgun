@@ -377,6 +377,51 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="updateMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address"     type="string" required="true" />
+		<cfargument name="newAddress"  type="string" required="false" default="" />
+		<cfargument name="name"        type="string" required="false" default="" />
+		<cfargument name="description" type="string" required="false" default="" />
+		<cfargument name="accessLevel" type="string" required="false" default="" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( Len( Trim( arguments.newAddress ) ) ) {
+				getVars[ "address" ] = arguments.newAddress;
+			}
+			if ( Len( Trim( arguments.name ) ) ) {
+				getVars[ "name" ] = arguments.name;
+			}
+			if ( Len( Trim( arguments.description ) ) ) {
+				getVars[ "description" ] = arguments.description;
+			}
+			if ( Len( Trim( arguments.accessLevel ) ) ) {
+				getVars[ "access_level" ] = arguments.accessLevel;
+			}
+
+			result = _restCall(
+				  httpMethod = "PUT"
+				, uri        = "/lists/#arguments.address#"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "list" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "UpdateMailingList() response was an in an unexpected format. Expected success message and list detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+
+			return result;
+		</cfscript>
+	</cffunction>
+
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
 		<cfargument name="httpMethod" type="string" required="true" />
@@ -508,7 +553,6 @@
 				} else {
 					errorParams.errorCode = 500;
 				}
-
 
 				_throw( argumentCollection = errorParams );
 			}

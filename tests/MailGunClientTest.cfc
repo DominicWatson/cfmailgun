@@ -707,6 +707,65 @@ component output=false {
 			} );
 
 		} );
+
+		describe( "The updateMailingList() method", function(){
+			it( "should send a a PUT request to /lists/(list_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List updated", list = {} } );
+
+				mailGunClient.updateMailingList(
+					  address    = "test@test.com"
+					, newAddress = "new@test.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "PUT" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@test.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should send optional URL variables when supplied", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List updated", list = {} } );
+
+				mailGunClient.updateMailingList(
+					  address     = "some@address.com"
+					, newAddress  = "new@address.com"
+					, name        = "This is my list"
+					, description = "Description here"
+					, accessLevel = "newAccessLevel"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars ?: "" ).toBe( {
+					  address      = "new@address.com"
+					, name         = "This is my list"
+					, description  = "Description here"
+					, access_level = "newAccessLevel"
+				} );
+			} );
+
+
+			it( "should throw a suitable error when response is not in the expected format.", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.updateMailingList(
+						  address    = "test@test.com"
+						, newAddress = "new@test.com"
+					);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "UpdateMailingList\(\) response was an in an unexpected format\. Expected success message and list detail\. Instead, recieved\: \["
+
+				);
+			} );
+
+		} );
 	}
 
 
