@@ -289,7 +289,7 @@ component output=false {
 				expect( result ).toBe( mockResult );
 			} );
 
-			it( "should send optional limit and skip get vars when passed", function(){
+			it( "should send optional 'limit' and 'skip' get vars when passed", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { total_count : 0, items : [] } );
