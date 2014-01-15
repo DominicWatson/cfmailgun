@@ -798,8 +798,111 @@ component output=false {
 			});
 
 		});
+
+		describe( "The listMailingListMembers method", function(){
+
+			it( "should send a get request to /lists/(list_address)/members", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count=1, items=[{address="test@test.com", name="Bob", subscribed=true, vars={} } ] } );
+
+				mailGunClient.listMailingListMembers( address = "some@address.com" );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/some@address.com/members" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should return total count and array of items from API call", function(){
+				var result     = "";
+				var mockResult = {
+					"total_count": 6256,
+					"items": [{
+						  address="test@test.com"
+						, name="Bob"
+						, subscribed=true
+						, vars={}
+					}]
+				}
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.listMailingListMembers( address = "some@address.com" );
+
+				expect( result ).toBe( mockResult );
+			} );
+
+			it( "should send optional [limit], [skip] and [subscribed] get vars when arguments passed", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", {
+					"total_count": 6256,
+					"items": [{
+						  address="test@test.com"
+						, name="Bob"
+						, subscribed=true
+						, vars={}
+					}]
+				} );
+
+				mailGunClient.listMailingListMembers( address="test@list.net", limit=50, skip=3, subscribed=true );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars.limit ?: "" ).toBe( 50 );
+				expect( callLog._restCall[1].getVars.skip  ?: "" ).toBe( 3  );
+				expect( callLog._restCall[1].getVars.subscribed  ?: "" ).toBe( "yes" );
+			} );
+		});
+
 	}
 
+/*
+
+			it( "should return total count and array of items from API call", function(){
+				var result     = "";
+				var mockResult = {
+					"total_count": 1,
+					"items": [{
+						"delivered_count": 924,
+						"name": "Sample",
+						"created_at": "Wed, 15 Feb 2012 11:31:17 GMT",
+						"clicked_count": 135,
+						"opened_count": 301,
+						"submitted_count": 998,
+						"unsubscribed_count": 44,
+						"bounced_count": 20,
+						"complained_count": 3,
+						"id": "1",
+						"dropped_count": 13
+					}
+				]}
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.listCampaigns( domain="some.domain.com" );
+
+				expect( result ).toBe( mockResult );
+			} );
+
+
+
+			it( "should throw suitable error when API return response is not in expected format", function(){
+				mailGunClient.$( "_restCall", { total_count : 5 } );
+
+				expect( function(){
+					mailGunClient.listCampaigns();
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "Expected response to contain \[total_count\] and \[items\] keys\. Instead, receieved: \["
+				);
+
+			} );
+
+		} );
+*/
 
 // helper to test private methods
 	function privateMethodRunner( method, args ) output=false {

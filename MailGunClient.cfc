@@ -444,6 +444,37 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="listMailingListMembers" access="public" returntype="struct" output="false">
+		<cfargument name="address"    type="string"  required="true" />
+		<cfargument name="limit"      type="numeric" required="false" />
+		<cfargument name="skip"       type="numeric" required="false" />
+		<cfargument name="subscribed" type="boolean" required="false" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( StructKeyExists( arguments, "limit" ) ) {
+				getVars[ "limit" ] = arguments.limit;
+			}
+			if ( StructKeyExists( arguments, "skip" ) ) {
+				getVars[ "skip" ] = arguments.skip;
+			}
+			if ( StructKeyExists( arguments, "subscribed" ) ) {
+				getVars[ "subscribed" ] = _boolFormat( arguments.subscribed );
+			}
+
+			result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists/#arguments.address#/members"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			return result;
+		</cfscript>
+	</cffunction>
+
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
 		<cfargument name="httpMethod" type="string" required="true" />
