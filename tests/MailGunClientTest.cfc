@@ -501,6 +501,39 @@ component output=false {
 				);
 			} );
 		} );
+
+		describe( "The deleteCampaign() method", function(){
+
+			it( "should send an HTTP DELETE request to /(domain)/campaigns/(id)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Campaign delete", id="someId" } );
+
+				mailGunClient.deleteCampaign(
+					  domain = "my.domain.net"
+					, id     = "someCampaign"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "DELETE" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/campaigns/someCampaign" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "my.domain.net" );
+			});
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.deleteCampaign( id="blah" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "DeleteCampaign\(\) response was an in an unexpected format\. Expected success message and campaign id\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
 	}
 
 
