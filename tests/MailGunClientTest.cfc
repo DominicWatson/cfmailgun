@@ -1071,6 +1071,79 @@ component output=false {
 			});
 
 		});
+
+		describe( "The bulkCreateMailingListMembers() method", function(){
+
+			it( "should send a POST request to /lists/(list_address)/members.json", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Members added", list={ address="list@address.com" } } );
+
+				mailGunClient.bulkCreateMailingListMembers(
+					  listAddress = "list@address.com"
+					, members     = [{address="test@test.com"}]
+					, subscribed  = true
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/list@address.com/members.json" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should serialize and correct passed array of members and forward to mailgun along with required subscribed argument", function(){
+				var callLog = "";
+				var members = [
+					  { doNot="get added"}
+					, { address="me@me.com", something="not to be added" }
+					, { address="me@me.com", vars={these="will", get="added" }, name="Harry potter", fubar="false" }
+				];
+				var expectedMembers = SerializeJson( [
+					  { address="me@me.com" }
+					, { address="me@me.com", vars={these="will", get="added" }, name="Harry potter" }
+				] );
+
+				mailGunClient.$( "_restCall", { message = "Members added", list={ address="list@address.com" } } );
+
+				mailGunClient.bulkCreateMailingListMembers(
+					  listAddress = "list@address.com"
+					, members     = members
+					, subscribed  = true
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( {
+					  subscribed = "yes"
+					, members    = expectedMembers
+				} );
+			} );
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				var members = [
+					  { doNot="get added"}
+					, { address="me@me.com", something="not to be added" }
+					, { address="me@me.com", vars={these="will", get="added" }, name="Harry potter", fubar="false" }
+				];
+
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+
+				expect( function(){
+					mailGunClient.bulkCreateMailingListMembers(
+						  listAddress = "list@address.com"
+						, members     = members
+						, subscribed  = false
+					);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "BulkCreateMailingListMembers\(\) response was an in an unexpected format\. Expected success message and list details\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
 	}
 
 // helper to test private methods

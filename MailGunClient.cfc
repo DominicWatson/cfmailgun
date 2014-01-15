@@ -620,6 +620,63 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="bulkCreateMailingListMembers" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress" type="string"  required="true" />
+		<cfargument name="members"     type="array"   required="true" />
+		<cfargument name="subscribed"  type="boolean" required="true" />
+
+		<cfscript>
+			var result = "";
+			var member        = "";
+			var cleanedMember = {};
+			var postVars = {
+				  subscribed = _boolFormat( arguments.subscribed )
+				, members    = []
+			};
+
+			for( member in arguments.members ){
+				cleanedMember = {};
+
+				if ( StructKeyExists( member, "name" ) and Len( Trim( member.name ) ) ) {
+					cleanedMember[ "name" ] = member.name;
+				}
+				if ( StructKeyExists( member, "address" ) and Len( Trim( member.address ) ) ) {
+					cleanedMember[ "address" ] = member.address;
+				}
+				if ( StructKeyExists( member, "vars" ) and IsStruct( member.vars ) and not StructIsEmpty( member.vars ) ) {
+					cleanedMember[ "vars" ] = member.vars;
+				}
+
+				if ( StructKeyExists( cleanedMember, "address" ) ) {
+					ArrayAppend( postVars.members, cleanedMember );
+				}
+			}
+
+			postVars.members = SerializeJson( postVars.members );
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/lists/#arguments.listAddress#/members.json"
+				, domain     = ""
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "list" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "BulkCreateMailingListMembers() response was an in an unexpected format. Expected success message and list details. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+
+
+
+			return result;
+		</cfscript>
+	</cffunction>
+
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
 		<cfargument name="httpMethod" type="string" required="true" />
