@@ -1035,6 +1035,42 @@ component output=false {
 				);
 			} );
 		} );
+
+		describe( "The deleteMailingListMember() method", function(){
+
+			it( "should send an HTTP DELETE request to /lists/(list_address)/members/(member_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member deleted", member={ address="address" } } );
+
+				mailGunClient.deleteMailingListMember(
+					  listAddress   = "test@address.com"
+					, memberAddress = "member@member.org.uk"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "DELETE" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@address.com/members/member@member.org.uk" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.deleteMailingListMember(
+					  listAddress   = "test@address.com"
+					, memberAddress = "member@member.org.uk"
+				);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "DeleteMailingListMember\(\) response was an in an unexpected format\. Expected success message and member address\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
 	}
 
 // helper to test private methods
