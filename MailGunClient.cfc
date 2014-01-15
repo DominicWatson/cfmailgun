@@ -228,22 +228,22 @@
 		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
 
 		<cfscript>
-			var result = "";
-			var postVars = {};
+			var result  = "";
+			var getVars = {};
 
 			if ( Len( Trim( arguments.name ) ) ) {
-				postVars.name = arguments.name;
+				getVars.name = arguments.name;
 			}
 
 			if ( Len( Trim( arguments.newId ) ) ) {
-				postVars.id = arguments.newId;
+				getVars.id = arguments.newId;
 			}
 
 			result = _restCall(
 				  httpMethod = "PUT"
 				, uri        = "/campaigns/#arguments.id#"
 				, domain     = arguments.domain
-				, postVars   = postVars
+				, getVars    = getVars
 			);
 
 			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "campaign" ) ) {

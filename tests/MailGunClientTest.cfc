@@ -440,7 +440,7 @@ component output=false {
 				expect( callLog._restCall[1].domain     ?: "" ).toBe( "my.domain.net" );
 			} );
 
-			it( "should send the optional [name] post variable when supplied", function(){
+			it( "should send the optional [name] url variable when supplied", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
@@ -453,10 +453,10 @@ component output=false {
 
 				callLog = mailGunClient.$callLog();
 
-				expect( callLog._restCall[1].postVars ?: "" ).toBe( { name = "This is my campaign" } );
+				expect( callLog._restCall[1].getVars ?: "" ).toBe( { name = "This is my campaign" } );
 			} );
 
-			it( "should send the optional [id] post variable when [newId] argument supplied", function(){
+			it( "should send the optional [id] url variable when [newId] argument supplied", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
@@ -469,10 +469,10 @@ component output=false {
 
 				callLog = mailGunClient.$callLog();
 
-				expect( callLog._restCall[1].postVars ?: "" ).toBe( { id = "aNewId" } );
+				expect( callLog._restCall[1].getVars ?: "" ).toBe( { id = "aNewId" } );
 			} );
 
-			it( "should send the optional [id] and [name] post variable when both arguments supplied", function(){
+			it( "should send the optional [id] and [name] url variable when both arguments supplied", function(){
 				var callLog = "";
 
 				mailGunClient.$( "_restCall", { message = "Campaign updated", campaign = {} } );
@@ -486,7 +486,7 @@ component output=false {
 
 				callLog = mailGunClient.$callLog();
 
-				expect( callLog._restCall[1].postVars ?: "" ).toBe( { id = "myId", name = "my name" } );
+				expect( callLog._restCall[1].getVars ?: "" ).toBe( { id = "myId", name = "my name" } );
 			} );
 
 			it( "should throw a suitable error when response is not in the expected format.", function(){
