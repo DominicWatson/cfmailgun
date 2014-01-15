@@ -232,6 +232,182 @@
 						</tbody>
 					</table>
 				</div>
+
+				<h2>Campaigns</h2>
+				<div class="method">
+					<h3>ListCampaigns()</h3>
+					<p> <strong class="returns">Returns</strong> the list of campaigns created for a given domain.</p>
+					<h4>Input arguments</h4>
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">domain</td>
+								<td>string</td>
+								<td class="argument-required">Yes/No</td>
+								<td>Mailgun registered domain for which to retrieve the list of campaigns. If the client has been instantiated with a default domain, this argument is optional, otherwise required.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">limit</td>
+								<td>number</td>
+								<td class="argument-required">No</td>
+								<td>Optional, default is 100. Limits the number of results to return.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">skip</td>
+								<td>number</td>
+								<td class="argument-required">No</td>
+								<td>Optional, default is 0. Offsets the results to return (used in conjuction with the <code>limit</code> argument to paginate results).</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="method">
+					<h3>GetCampaign()</h3>
+					<p> <strong class="returns">Returns</strong> a single campaign for a given domain. Information returned includes summary statistics.</p>
+					<h4>Input arguments</h4>
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">domain</td>
+								<td>string</td>
+								<td class="argument-required">Yes/No</td>
+								<td>Mailgun registered domain for which to retrieve the campaign. If the client has been instantiated with a default domain, this argument is optional, otherwise required.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">id</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>ID of the campaign you wish to retrieve</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="method">
+					<h3>CreateCampaign()</h3>
+					<p> Creates a new campaign under a given domain. Note, that it will not create a new campaign, if the limit for account is reached - old campaigns must be deleted first. <strong class="returns">Returns</strong> a success message plus the details of the newly created campaign</p>
+					<h4>Input arguments</h4>
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">domain</td>
+								<td>string</td>
+								<td class="argument-required">Yes/No</td>
+								<td>Mailgun registered domain in which to create the campaign. If the client has been instantiated with a default domain, this argument is optional, otherwise required.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">name</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Name of the campaign</td>
+							</tr>
+							<tr>
+								<td class="argument-name">id</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>ID of the campaign you wish to create. If not supplied, MailGun will generate an ID and return it along with the result.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="method">
+					<h3>UpdateCampaign()</h3>
+					<p> Updates the name and/or id of an existing campaign under a given domain. <strong class="returns">Returns</strong> a success message plus the details of the updated campaign</p>
+					<h4>Input arguments</h4>
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">domain</td>
+								<td>string</td>
+								<td class="argument-required">Yes/No</td>
+								<td>Mailgun registered domain in which to update the campaign. If the client has been instantiated with a default domain, this argument is optional, otherwise required.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">id</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Existing ID of the campaign you wish to update</td>
+							</tr>
+							<tr>
+								<td class="argument-name">name</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>New name of the campaign</td>
+							</tr>
+							<tr>
+								<td class="argument-name">newId</td>
+								<td>string</td>
+								<td class="argument-required">No</td>
+								<td>New ID for the campaign</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="method">
+					<h3>DeleteCampaign()</h3>
+					<p> Deletes the given campaign. <strong class="returns">Returns</strong> a success message plus the ID of the deleted campaign</p>
+					<h4>Input arguments</h4>
+					<table class="method-arguments">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="argument-name">domain</td>
+								<td>string</td>
+								<td class="argument-required">Yes/No</td>
+								<td>Mailgun registered domain in which to delete the campaign. If the client has been instantiated with a default domain, this argument is optional, otherwise required.</td>
+							</tr>
+							<tr>
+								<td class="argument-name">id</td>
+								<td>string</td>
+								<td class="argument-required">Yes</td>
+								<td>Existing ID of the campaign you wish to delete</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
 			</section>
 		</div>
 
