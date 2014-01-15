@@ -868,6 +868,36 @@ component output=false {
 				);
 			});
 		});
+
+		describe( "The getMailingListMember() method", function(){
+
+			it( "should send a GET request to /lists/(list_address)/members/(member_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { member={ address="test@test.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.getMailingListMember( listAddress = "some@address.com", memberAddress="test@member.com" );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/some@address.com/members/test@member.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should throw an informative error when response not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.getMailingListMember( listAddress = "some@address.com", memberAddress="test@member.com" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "GetMailingListMember\(\) response was an in an unexpected format\. Expected member structure\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
 	}
 
 // helper to test private methods
