@@ -315,6 +315,47 @@ component output=false {
 			} );
 
 		} );
+
+		describe( "The getCampaigns() method", function(){
+
+			it( "should send a GET request to: /(domain)/campaigns/(campaignId)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { id="someId", name="Some name" } );
+
+				mailGunClient.getCampaign( domain = "some.domain.com", id="myCampaign"  );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/campaigns/myCampaign" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "some.domain.com" );
+			} );
+
+			it( "should return the response from the API call", function(){
+				var result     = "";
+				var mockresult = { id = "result", name = "here" };
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.getCampaign( domain = "test.domain.com", id="someCampaign"  );
+
+				expect( result ).toBe( mockResult );
+			} );
+
+			it( "should throw a sensible error when the result is not in the expected format", function(){
+					mailGunClient.$( "_restCall", { bad = "result", format = "wrong" } );
+
+					expect( function(){
+						mailGunClient.getCampaign( "idOfACampaign" );
+
+					} ).toThrow(
+						  type  = "cfmailgun.unexpected"
+						, regex = "Unexpected mailgun response\. Expected a campaign object \(structure\) but received: \["
+					);
+			} );
+
+		} );
 	}
 
 

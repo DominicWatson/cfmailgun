@@ -166,6 +166,29 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="getCampaign" access="public" returntype="struct" output="false">
+		<cfargument name="id"     type="string" required="true" />
+		<cfargument name="domain" type="string" required="false" default="#_getDefaultDomain()#" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/campaigns/#arguments.id#"
+				, domain     = arguments.domain
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "id" ) and StructKeyExists( result, "name" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "Unexpected mailgun response. Expected a campaign object (structure) but received: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
 
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
