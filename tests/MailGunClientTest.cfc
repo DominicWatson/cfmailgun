@@ -316,7 +316,7 @@ component output=false {
 
 		} );
 
-		describe( "The getCampaigns() method", function(){
+		describe( "The getCampaign() method", function(){
 
 			it( "should send a GET request to: /(domain)/campaigns/(campaignId)", function(){
 				var callLog = "";
@@ -663,6 +663,47 @@ component output=false {
 					  type  = "cfmailgun.unexpected"
 					, regex = "createMailingList\(\) response was an in an unexpected format\. Expected success message and list detail\. Instead, recieved\: \["
 				);
+			} );
+
+		} );
+
+		describe( "The getMailingList() method", function(){
+
+			it( "should send a GET request to: /lists/(list_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { list={ address="test234@somedomain.com" } } );
+
+				mailGunClient.getMailingList( address="test234@somedomain.com"  );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test234@somedomain.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should return the response from the API call", function(){
+				var result     = "";
+				var mockresult = { list={ address="test234@somedomain.com" } };
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.getMailingList( address="test234@somedomain.com"  );
+
+				expect( result ).toBe( mockResult.list );
+			} );
+
+			it( "should throw a sensible error when the result is not in the expected format", function(){
+					mailGunClient.$( "_restCall", { bad = "result", format = "wrong" } );
+
+					expect( function(){
+						mailGunClient.getMailingList( "test234@somedomain.com" );
+
+					} ).toThrow(
+						  type  = "cfmailgun.unexpected"
+						, regex = "Unexpected mailgun response\. Expected a mailing list object \(structure\) but received: \["
+					);
 			} );
 
 		} );

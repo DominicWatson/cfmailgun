@@ -316,6 +316,28 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="getMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address" type="string" required="true" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists/#arguments.address#"
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "list" ) and IsStruct( result.list ) and StructKeyExists( result.list, "address" ) ) {
+				return result.list;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, errorCode = 500
+				, message   = "Unexpected mailgun response. Expected a mailing list object (structure) but received: [#SerializeJson( result )#]"
+			);
+		</cfscript>
+	</cffunction>
+
 	<cffunction name="createMailingList" access="public" returntype="struct" output="false">
 		<cfargument name="address"     type="string" required="true" />
 		<cfargument name="name"        type="string" required="false" default="" />
