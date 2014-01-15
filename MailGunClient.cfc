@@ -638,7 +638,7 @@
 				switch( arguments.status_code ) {
 					case 400:
 						errorParams.type    = "badrequest";
-						errorParams.message = "MailGun request failure. Often caused by bad or missing parameters. See detail for full MailGun response. ";
+						errorParams.message = "MailGun request failure. ";
 					break;
 
 					case 401:
@@ -672,7 +672,7 @@
 				} catch ( any e ){}
 
 				if ( IsStruct( deserialized ) and StructKeyExists( deserialized, "message" ) ) {
-					errorParams.message &= deserialized.message
+					errorParams.message &= "[" & deserialized.message & "]";
 				} else {
 					errorParams.message &= "MailGun response body: [#arguments.filecontent#]"
 				}
