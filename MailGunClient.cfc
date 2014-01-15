@@ -281,6 +281,40 @@
 		</cfscript>
 	</cffunction>
 
+<!--- MAILING LISTS --->
+	<cffunction name="listMailingLists" access="public" returntype="struct" output="false">
+		<cfargument name="limit"  type="numeric" required="false" />
+		<cfargument name="skip"   type="numeric" required="false" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( StructKeyExists( arguments, "limit" ) ) {
+				getVars.limit = arguments.limit;
+			}
+			if ( StructKeyExists( arguments, "skip" ) ) {
+				getVars.skip = arguments.skip;
+			}
+
+			result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( StructKeyExists( result, "total_count" ) and StructKeyExists( result, "items" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, errorCode = 500
+				, message   = "Expected response to contain [total_count] and [items] keys. Instead, receieved: [#SerializeJson( result )#]"
+			);
+		</cfscript>
+	</cffunction>
 
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">

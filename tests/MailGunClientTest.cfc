@@ -534,6 +534,70 @@ component output=false {
 			});
 
 		});
+
+		describe( "The listMailingLists() method", function(){
+
+			it( "should send a GET request to: /(domain)/lists", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count=0, items=[] } );
+
+				mailGunClient.listMailingLists();
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should return total count and array of items from API call", function(){
+				var result     = "";
+				var mockResult = {
+					"total_count": 1,
+					"items": [{
+						  access_level  = "readonly"
+						, address       = "test@test.com"
+						, created_at    = "Wed, 15 Jan 2014 11:59:02 -0000"
+						, description   = "test description"
+						, members_count = 2525
+						, name          = "Test mailing list"
+					}]
+				};
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.listMailingLists();
+
+				expect( result ).toBe( mockResult );
+			} );
+
+			it( "should send optional 'limit' and 'skip' get vars when passed", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count : 0, items : [] } );
+
+				mailGunClient.listMailingLists( limit=50, skip=3 );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars.limit ?: "" ).toBe( 50 );
+				expect( callLog._restCall[1].getVars.skip  ?: "" ).toBe( 3  );
+			} );
+
+			it( "should throw suitable error when API return response is not in expected format", function(){
+				mailGunClient.$( "_restCall", { total_count : 5 } );
+
+				expect( function(){
+					mailGunClient.listMailingLists();
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "Expected response to contain \[total_count\] and \[items\] keys\. Instead, receieved: \["
+				);
+
+			} );
+
+		} );
 	}
 
 
