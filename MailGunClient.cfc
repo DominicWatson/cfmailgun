@@ -551,6 +551,52 @@
 		</cfscript>
 	</cffunction>
 
+	<cffunction name="updateMailingListMember" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress"   type="string"  required="true" />
+		<cfargument name="memberAddress" type="string"  required="true" />
+		<cfargument name="newAddress"    type="string"  required="false" default="" />
+		<cfargument name="name"          type="string"  required="false" default="" />
+		<cfargument name="vars"          type="struct"  required="false" />
+		<cfargument name="subscribed"    type="boolean" required="false" />
+
+		<cfscript>
+			var result = "";
+			var getVars = {};
+
+			if( Len( Trim( arguments.newAddress ) ) ) {
+				getVars[ "address" ] = arguments.newAddress;
+			}
+			if( Len( Trim( arguments.name ) ) ) {
+				getVars[ "name" ] = arguments.name;
+			}
+			if( StructKeyExists( arguments, "vars" ) ) {
+				getVars[ "vars" ] = SerializeJson( arguments.vars );
+			}
+			if( StructKeyExists( arguments, "subscribed" ) ) {
+				getVars[ "subscribed" ] = _boolFormat( arguments.subscribed );
+			}
+
+			result = _restCall(
+				  httpMethod = "PUT"
+				, uri        = "/lists/#arguments.listAddress#/members/#arguments.memberAddress#"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "member" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "UpdateMailingListMember() response was an in an unexpected format. Expected success message and member detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+
+			return result;
+		</cfscript>
+	</cffunction>
+
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
 		<cfargument name="httpMethod" type="string" required="true" />
