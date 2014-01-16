@@ -316,7 +316,7 @@ component output=false {
 
 		} );
 
-		describe( "The getCampaigns() method", function(){
+		describe( "The getCampaign() method", function(){
 
 			it( "should send a GET request to: /(domain)/campaigns/(campaignId)", function(){
 				var callLog = "";
@@ -534,8 +534,617 @@ component output=false {
 			});
 
 		});
-	}
 
+		describe( "The listMailingLists() method", function(){
+
+			it( "should send a GET request to: /lists", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count=0, items=[] } );
+
+				mailGunClient.listMailingLists();
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should return total count and array of items from API call", function(){
+				var result     = "";
+				var mockResult = {
+					"total_count": 1,
+					"items": [{
+						  access_level  = "readonly"
+						, address       = "test@test.com"
+						, created_at    = "Wed, 15 Jan 2014 11:59:02 -0000"
+						, description   = "test description"
+						, members_count = 2525
+						, name          = "Test mailing list"
+					}]
+				};
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.listMailingLists();
+
+				expect( result ).toBe( mockResult );
+			} );
+
+			it( "should send optional 'limit' and 'skip' get vars when passed", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count : 0, items : [] } );
+
+				mailGunClient.listMailingLists( limit=50, skip=3 );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars.limit ?: "" ).toBe( 50 );
+				expect( callLog._restCall[1].getVars.skip  ?: "" ).toBe( 3  );
+			} );
+
+			it( "should throw suitable error when API return response is not in expected format", function(){
+				mailGunClient.$( "_restCall", { total_count : 5 } );
+
+				expect( function(){
+					mailGunClient.listMailingLists();
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "Expected response to contain \[total_count\] and \[items\] keys\. Instead, receieved: \["
+				);
+
+			} );
+
+		} );
+
+		describe( "The createMailingList() method", function(){
+
+			it( "should send a post request to /lists", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List created", list = {} } );
+
+				mailGunClient.createMailingList(
+					address = "test@test.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should send required [address] argument as a post variable", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List created", list = {} } );
+
+				mailGunClient.createMailingList(
+					address = "test@test.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { address="test@test.com" } );
+			} );
+
+			it( "should send optional [name], [access_level] and [description] arguments as post variables when passed in and not empty", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List created", list = {} } );
+
+				mailGunClient.createMailingList(
+					  domain       = "my.domain.net"
+					, address      = "test@test.com"
+					, name         = "I like testing lists, really"
+					, description  = "this is a description"
+					, accessLevel  = "test"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( {
+					  address      = "test@test.com"
+					, name         = "I like testing lists, really"
+					, description  = "this is a description"
+					, access_level = "test"
+				 } );
+			} );
+
+			it( "should throw a suitable error when response in the wrong format", function(){
+				mailGunClient.$( "_restCall", { bade = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.createMailingList( "list@test.com" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "createMailingList\(\) response was an in an unexpected format\. Expected success message and list detail\. Instead, recieved\: \["
+				);
+			} );
+
+		} );
+
+		describe( "The getMailingList() method", function(){
+
+			it( "should send a GET request to: /lists/(list_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { list={ address="test234@somedomain.com" } } );
+
+				mailGunClient.getMailingList( address="test234@somedomain.com"  );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test234@somedomain.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should return the response from the API call", function(){
+				var result     = "";
+				var mockresult = { list={ address="test234@somedomain.com" } };
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.getMailingList( address="test234@somedomain.com"  );
+
+				expect( result ).toBe( mockResult.list );
+			} );
+
+			it( "should throw a sensible error when the result is not in the expected format", function(){
+					mailGunClient.$( "_restCall", { bad = "result", format = "wrong" } );
+
+					expect( function(){
+						mailGunClient.getMailingList( "test234@somedomain.com" );
+
+					} ).toThrow(
+						  type  = "cfmailgun.unexpected"
+						, regex = "Unexpected mailgun response\. Expected a mailing list object \(structure\) but received: \["
+					);
+			} );
+
+		} );
+
+		describe( "The updateMailingList() method", function(){
+			it( "should send a a PUT request to /lists/(list_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List updated", list = {} } );
+
+				mailGunClient.updateMailingList(
+					  address    = "test@test.com"
+					, newAddress = "new@test.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "PUT" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@test.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should send optional URL variables when supplied", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List updated", list = {} } );
+
+				mailGunClient.updateMailingList(
+					  address     = "some@address.com"
+					, newAddress  = "new@address.com"
+					, name        = "This is my list"
+					, description = "Description here"
+					, accessLevel = "newAccessLevel"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars ?: "" ).toBe( {
+					  address      = "new@address.com"
+					, name         = "This is my list"
+					, description  = "Description here"
+					, access_level = "newAccessLevel"
+				} );
+			} );
+
+
+			it( "should throw a suitable error when response is not in the expected format.", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.updateMailingList(
+						  address    = "test@test.com"
+						, newAddress = "new@test.com"
+					);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "UpdateMailingList\(\) response was an in an unexpected format\. Expected success message and list detail\. Instead, recieved\: \["
+
+				);
+			} );
+
+		} );
+
+		describe( "The deleteMailingList() method", function(){
+
+			it( "should send an HTTP DELETE request to /lists/(list_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List deleted", address="someId" } );
+
+				mailGunClient.deleteMailingList(
+					address = "test@address.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "DELETE" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@address.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.deleteMailingList( address="test@address.com" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "DeleteMailingList\(\) response was an in an unexpected format\. Expected success message and list address\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
+
+		describe( "The listMailingListMembers method", function(){
+
+			it( "should send a get request to /lists/(list_address)/members", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { total_count=1, items=[{address="test@test.com", name="Bob", subscribed=true, vars={} } ] } );
+
+				mailGunClient.listMailingListMembers( address = "some@address.com" );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/some@address.com/members" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should return total count and array of items from API call", function(){
+				var result     = "";
+				var mockResult = {
+					"total_count": 6256,
+					"items": [{
+						  address="test@test.com"
+						, name="Bob"
+						, subscribed=true
+						, vars={}
+					}]
+				}
+
+				mailGunClient.$( "_restCall", mockResult );
+
+				result = mailGunClient.listMailingListMembers( address = "some@address.com" );
+
+				expect( result ).toBe( mockResult );
+			} );
+
+			it( "should send optional [limit], [skip] and [subscribed] get vars when arguments passed", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", {
+					"total_count": 6256,
+					"items": [{
+						  address="test@test.com"
+						, name="Bob"
+						, subscribed=true
+						, vars={}
+					}]
+				} );
+
+				mailGunClient.listMailingListMembers( address="test@list.net", limit=50, skip=3, subscribed=true );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars.limit ?: "" ).toBe( 50 );
+				expect( callLog._restCall[1].getVars.skip  ?: "" ).toBe( 3  );
+				expect( callLog._restCall[1].getVars.subscribed  ?: "" ).toBe( "yes" );
+			} );
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.listMailingListMembers( address="test@list.net", limit=50, skip=3, subscribed=true );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "ListMailingListMembers\(\) response was an in an unexpected format\. Expected list of addresses\. Instead, recieved\: \["
+
+				);
+			});
+		});
+
+		describe( "The getMailingListMember() method", function(){
+
+			it( "should send a GET request to /lists/(list_address)/members/(member_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { member={ address="test@test.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.getMailingListMember( listAddress = "some@address.com", memberAddress="test@member.com" );
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "GET" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/some@address.com/members/test@member.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should throw an informative error when response not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.getMailingListMember( listAddress = "some@address.com", memberAddress="test@member.com" );
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "GetMailingListMember\(\) response was an in an unexpected format\. Expected member structure\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
+
+		describe( "The createMailingListMember() method", function(){
+
+			it( "should send a POST request to /lists/(list_address)/members", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member added", member={ address="me@me.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@list.com/members" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+
+			it( "should send required [address] argument as a post variable", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member added", member={ address="me@me.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { address="me@me.com" } );
+			} );
+
+			it( "should send optional [name], [vars], [subscribed] and [upsert] arguments as post variables when passed in and not empty", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member added", member={ address="me@me.com", name="Bob", subscribed=true, vars={} } } );
+
+				mailGunClient.createMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+					, name          = "MiMi Moore"
+					, vars          = { var1="hell", var2="o world" }
+					, subscribed    = false
+					, upsert        = true
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( { address="me@me.com", name="MiMi Moore", vars="#SerializeJson({ var1="hell", var2="o world" })#", subscribed="no", upsert="yes" } );
+			} );
+
+
+			it( "should throw a suitable error when response in the wrong format", function(){
+				mailGunClient.$( "_restCall", { bade = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.createMailingListMember(
+						  listAddress   = "test@list.com"
+						, memberAddress = "me@me.com"
+						, name          = "MiMi Moore"
+						, vars          = { var1="hell", var2="o world" }
+						, subscribed    = false
+						, upsert        = true
+					);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "CreateMailingListMember\(\) response was an in an unexpected format\. Expected success message and member detail\. Instead, recieved\: \["
+				);
+			} );
+		} );
+
+		describe( "The updateMailingListMember() method", function(){
+			it( "should send a a PUT request to /lists/(list_address)/members/(member_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List updated", member = {} } );
+
+				mailGunClient.updateMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+					, name          = "MiMi Moore"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "PUT" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@list.com/members/me@me.com" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			} );
+
+			it( "should send optional URL variables when supplied", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "List updated", member = {} } );
+
+				mailGunClient.updateMailingListMember(
+					  listAddress   = "test@list.com"
+					, memberAddress = "me@me.com"
+					, name          = "MiMi Evan Moore"
+					, newAddress    = "mynew@address.com"
+					, vars          = { some="vars", are=true }
+					, subscribed    = false
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].getVars ?: "" ).toBe( {
+					  address      = "mynew@address.com"
+					, name         = "MiMi Evan Moore"
+					, vars         = SerializeJson( { some="vars", are=true } )
+					, subscribed   = "no"
+				} );
+			} );
+
+			it( "should throw a suitable error when response is not in the expected format.", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.updateMailingListMember(
+						  listAddress   = "test@list.com"
+						, memberAddress = "me@me.com"
+						, name          = "MiMi Evan Moore"
+						, newAddress    = "mynew@address.com"
+						, vars          = { some="vars", are=true }
+						, subscribed    = false
+					);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "UpdateMailingListMember\(\) response was an in an unexpected format\. Expected success message and member detail\. Instead, recieved\: \["
+
+				);
+			} );
+		} );
+
+		describe( "The deleteMailingListMember() method", function(){
+
+			it( "should send an HTTP DELETE request to /lists/(list_address)/members/(member_address)", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Member deleted", member={ address="address" } } );
+
+				mailGunClient.deleteMailingListMember(
+					  listAddress   = "test@address.com"
+					, memberAddress = "member@member.org.uk"
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "DELETE" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/test@address.com/members/member@member.org.uk" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+				expect( function(){
+					mailGunClient.deleteMailingListMember(
+					  listAddress   = "test@address.com"
+					, memberAddress = "member@member.org.uk"
+				);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "DeleteMailingListMember\(\) response was an in an unexpected format\. Expected success message and member address\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
+
+		describe( "The bulkCreateMailingListMembers() method", function(){
+
+			it( "should send a POST request to /lists/(list_address)/members.json", function(){
+				var callLog = "";
+
+				mailGunClient.$( "_restCall", { message = "Members added", list={ address="list@address.com" } } );
+
+				mailGunClient.bulkCreateMailingListMembers(
+					  listAddress = "list@address.com"
+					, members     = [{address="test@test.com"}]
+					, subscribed  = true
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].httpMethod ?: "" ).toBe( "POST" );
+				expect( callLog._restCall[1].uri        ?: "" ).toBe( "/lists/list@address.com/members.json" );
+				expect( callLog._restCall[1].domain     ?: "" ).toBe( "" );
+			});
+
+			it( "should serialize and correct passed array of members and forward to mailgun along with required subscribed argument", function(){
+				var callLog = "";
+				var members = [
+					  { doNot="get added"}
+					, { address="me@me.com", something="not to be added" }
+					, { address="me@me.com", vars={these="will", get="added" }, name="Harry potter", fubar="false" }
+				];
+				var expectedMembers = SerializeJson( [
+					  { address="me@me.com" }
+					, { address="me@me.com", vars={these="will", get="added" }, name="Harry potter" }
+				] );
+
+				mailGunClient.$( "_restCall", { message = "Members added", list={ address="list@address.com" } } );
+
+				mailGunClient.bulkCreateMailingListMembers(
+					  listAddress = "list@address.com"
+					, members     = members
+					, subscribed  = true
+				);
+
+				callLog = mailGunClient.$callLog();
+
+				expect( callLog._restCall[1].postVars ?: "" ).toBe( {
+					  subscribed = "yes"
+					, members    = expectedMembers
+				} );
+			} );
+
+			it( "should throw an informative error when response is not in the expected format", function(){
+				var members = [
+					  { doNot="get added"}
+					, { address="me@me.com", something="not to be added" }
+					, { address="me@me.com", vars={these="will", get="added" }, name="Harry potter", fubar="false" }
+				];
+
+				mailGunClient.$( "_restCall", { bad = "response", format = {} } );
+
+
+				expect( function(){
+					mailGunClient.bulkCreateMailingListMembers(
+						  listAddress = "list@address.com"
+						, members     = members
+						, subscribed  = false
+					);
+				} ).toThrow(
+					  type  = "cfmailgun.unexpected"
+					, regex = "BulkCreateMailingListMembers\(\) response was an in an unexpected format\. Expected success message and list details\. Instead, recieved\: \["
+
+				);
+			});
+
+		});
+	}
 
 // helper to test private methods
 	function privateMethodRunner( method, args ) output=false {

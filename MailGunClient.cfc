@@ -281,6 +281,401 @@
 		</cfscript>
 	</cffunction>
 
+<!--- MAILING LISTS --->
+	<cffunction name="listMailingLists" access="public" returntype="struct" output="false">
+		<cfargument name="limit"  type="numeric" required="false" />
+		<cfargument name="skip"   type="numeric" required="false" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( StructKeyExists( arguments, "limit" ) ) {
+				getVars.limit = arguments.limit;
+			}
+			if ( StructKeyExists( arguments, "skip" ) ) {
+				getVars.skip = arguments.skip;
+			}
+
+			result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( StructKeyExists( result, "total_count" ) and StructKeyExists( result, "items" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, errorCode = 500
+				, message   = "Expected response to contain [total_count] and [items] keys. Instead, receieved: [#SerializeJson( result )#]"
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="getMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address" type="string" required="true" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists/#arguments.address#"
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "list" ) and IsStruct( result.list ) and StructKeyExists( result.list, "address" ) ) {
+				return result.list;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, errorCode = 500
+				, message   = "Unexpected mailgun response. Expected a mailing list object (structure) but received: [#SerializeJson( result )#]"
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="createMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address"     type="string" required="true" />
+		<cfargument name="name"        type="string" required="false" default="" />
+		<cfargument name="description" type="string" required="false" default="" />
+		<cfargument name="accessLevel" type="string" required="false" default="" />
+
+		<cfscript>
+			var postVars = { address = arguments.address };
+			var result   = "";
+
+			if ( Len( Trim( arguments.name ) ) ) {
+				postVars[ "name" ] = arguments.name;
+			}
+			if ( Len( Trim( arguments.description ) ) ) {
+				postVars[ "description" ] = arguments.description;
+			}
+			if ( Len( Trim( arguments.accessLevel ) ) ) {
+				postVars[ "access_level" ] = arguments.accessLevel;
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/lists"
+				, domain     = ""
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "list" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "CreateMailingList() response was an in an unexpected format. Expected success message and list detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="updateMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address"     type="string" required="true" />
+		<cfargument name="newAddress"  type="string" required="false" default="" />
+		<cfargument name="name"        type="string" required="false" default="" />
+		<cfargument name="description" type="string" required="false" default="" />
+		<cfargument name="accessLevel" type="string" required="false" default="" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( Len( Trim( arguments.newAddress ) ) ) {
+				getVars[ "address" ] = arguments.newAddress;
+			}
+			if ( Len( Trim( arguments.name ) ) ) {
+				getVars[ "name" ] = arguments.name;
+			}
+			if ( Len( Trim( arguments.description ) ) ) {
+				getVars[ "description" ] = arguments.description;
+			}
+			if ( Len( Trim( arguments.accessLevel ) ) ) {
+				getVars[ "access_level" ] = arguments.accessLevel;
+			}
+
+			result = _restCall(
+				  httpMethod = "PUT"
+				, uri        = "/lists/#arguments.address#"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "list" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "UpdateMailingList() response was an in an unexpected format. Expected success message and list detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+
+			return result;
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="deleteMailingList" access="public" returntype="struct" output="false">
+		<cfargument name="address" type="string" required="true" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "DELETE"
+				, uri        = "/lists/#arguments.address#"
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "address" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "DeleteMailingList() response was an in an unexpected format. Expected success message and list address. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="listMailingListMembers" access="public" returntype="struct" output="false">
+		<cfargument name="address"    type="string"  required="true" />
+		<cfargument name="limit"      type="numeric" required="false" />
+		<cfargument name="skip"       type="numeric" required="false" />
+		<cfargument name="subscribed" type="boolean" required="false" />
+
+		<cfscript>
+			var result  = "";
+			var getVars = {};
+
+			if ( StructKeyExists( arguments, "limit" ) ) {
+				getVars[ "limit" ] = arguments.limit;
+			}
+			if ( StructKeyExists( arguments, "skip" ) ) {
+				getVars[ "skip" ] = arguments.skip;
+			}
+			if ( StructKeyExists( arguments, "subscribed" ) ) {
+				getVars[ "subscribed" ] = _boolFormat( arguments.subscribed );
+			}
+
+			result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists/#arguments.address#/members"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "total_count" ) and StructKeyExists( result, "items" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "ListMailingListMembers() response was an in an unexpected format. Expected list of addresses. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="getMailingListMember" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress"   type="string" required="true" />
+		<cfargument name="memberAddress" type="string" required="true" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "GET"
+				, uri        = "/lists/#arguments.listAddress#/members/#arguments.memberAddress#"
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "member" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "GetMailingListMember() response was an in an unexpected format. Expected member structure. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="createMailingListMember" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress"   type="string"  required="true" />
+		<cfargument name="memberAddress" type="string"  required="true" />
+		<cfargument name="name"          type="string"  required="false" default="" />
+		<cfargument name="vars"          type="struct"  required="false" />
+		<cfargument name="subscribed"    type="boolean" required="false" />
+		<cfargument name="upsert"        type="boolean" required="false" />
+
+		<cfscript>
+			var result   = "";
+			var postVars = { address = arguments.memberAddress };
+
+			if ( Len( Trim( arguments.name ) ) ) {
+				postVars[ "name" ] = arguments.name;
+			}
+
+			if ( StructKeyExists( arguments, "vars" ) ) {
+				postVars[ "vars" ] = SerializeJson( arguments.vars );
+			}
+			if ( StructKeyExists( arguments, "subscribed" ) ) {
+				postVars[ "subscribed" ] = _boolFormat( arguments.subscribed );
+			}
+			if ( StructKeyExists( arguments, "upsert" ) ) {
+				postVars[ "upsert" ] = _boolFormat( arguments.upsert );
+			}
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/lists/#arguments.listAddress#/members"
+				, postVars   = postVars
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "member" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "CreateMailingListMember() response was an in an unexpected format. Expected success message and member detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="updateMailingListMember" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress"   type="string"  required="true" />
+		<cfargument name="memberAddress" type="string"  required="true" />
+		<cfargument name="newAddress"    type="string"  required="false" default="" />
+		<cfargument name="name"          type="string"  required="false" default="" />
+		<cfargument name="vars"          type="struct"  required="false" />
+		<cfargument name="subscribed"    type="boolean" required="false" />
+
+		<cfscript>
+			var result = "";
+			var getVars = {};
+
+			if( Len( Trim( arguments.newAddress ) ) ) {
+				getVars[ "address" ] = arguments.newAddress;
+			}
+			if( Len( Trim( arguments.name ) ) ) {
+				getVars[ "name" ] = arguments.name;
+			}
+			if( StructKeyExists( arguments, "vars" ) ) {
+				getVars[ "vars" ] = SerializeJson( arguments.vars );
+			}
+			if( StructKeyExists( arguments, "subscribed" ) ) {
+				getVars[ "subscribed" ] = _boolFormat( arguments.subscribed );
+			}
+
+			result = _restCall(
+				  httpMethod = "PUT"
+				, uri        = "/lists/#arguments.listAddress#/members/#arguments.memberAddress#"
+				, domain     = ""
+				, getVars    = getVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "member" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "UpdateMailingListMember() response was an in an unexpected format. Expected success message and member detail. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+
+			return result;
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="deleteMailingListMember" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress"   type="string"  required="true" />
+		<cfargument name="memberAddress" type="string"  required="true" />
+
+		<cfscript>
+			var result = _restCall(
+				  httpMethod = "DELETE"
+				, uri        = "/lists/#arguments.listAddress#/members/#arguments.memberAddress#"
+				, domain     = ""
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "member" ) and IsStruct( result.member ) and StructKeyExists( result.member, "address" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "DeleteMailingListMember() response was an in an unexpected format. Expected success message and member address. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="bulkCreateMailingListMembers" access="public" returntype="struct" output="false">
+		<cfargument name="listAddress" type="string"  required="true" />
+		<cfargument name="members"     type="array"   required="true" />
+		<cfargument name="subscribed"  type="boolean" required="true" />
+
+		<cfscript>
+			var result = "";
+			var member        = "";
+			var cleanedMember = {};
+			var postVars = {
+				  subscribed = _boolFormat( arguments.subscribed )
+				, members    = []
+			};
+
+			for( member in arguments.members ){
+				cleanedMember = {};
+
+				if ( StructKeyExists( member, "name" ) and Len( Trim( member.name ) ) ) {
+					cleanedMember[ "name" ] = member.name;
+				}
+				if ( StructKeyExists( member, "address" ) and Len( Trim( member.address ) ) ) {
+					cleanedMember[ "address" ] = member.address;
+				}
+				if ( StructKeyExists( member, "vars" ) and IsStruct( member.vars ) and not StructIsEmpty( member.vars ) ) {
+					cleanedMember[ "vars" ] = member.vars;
+				}
+
+				if ( StructKeyExists( cleanedMember, "address" ) ) {
+					ArrayAppend( postVars.members, cleanedMember );
+				}
+			}
+
+			postVars.members = SerializeJson( postVars.members );
+
+			result = _restCall(
+				  httpMethod = "POST"
+				, uri        = "/lists/#arguments.listAddress#/members.json"
+				, domain     = ""
+				, postVars   = postVars
+			);
+
+			if ( IsStruct( result ) and StructKeyExists( result, "message" ) and StructKeyExists( result, "list" ) ) {
+				return result;
+			}
+
+			_throw(
+				  type      = "unexpected"
+				, message   = "BulkCreateMailingListMembers() response was an in an unexpected format. Expected success message and list details. Instead, recieved: [#SerializeJson( result )#]"
+				, errorCode = 500
+			);
+
+
+
+			return result;
+		</cfscript>
+	</cffunction>
 
 <!--- PRIVATE HELPERS --->
 	<cffunction name="_restCall" access="private" returntype="struct" output="false">
@@ -369,7 +764,7 @@
 				switch( arguments.status_code ) {
 					case 400:
 						errorParams.type    = "badrequest";
-						errorParams.message = "MailGun request failure. Often caused by bad or missing parameters. See detail for full MailGun response. ";
+						errorParams.message = "MailGun request failure. ";
 					break;
 
 					case 401:
@@ -403,7 +798,7 @@
 				} catch ( any e ){}
 
 				if ( IsStruct( deserialized ) and StructKeyExists( deserialized, "message" ) ) {
-					errorParams.message &= deserialized.message
+					errorParams.message &= "[" & deserialized.message & "]";
 				} else {
 					errorParams.message &= "MailGun response body: [#arguments.filecontent#]"
 				}
@@ -413,7 +808,6 @@
 				} else {
 					errorParams.errorCode = 500;
 				}
-
 
 				_throw( argumentCollection = errorParams );
 			}
