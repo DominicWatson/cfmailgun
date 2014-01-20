@@ -702,7 +702,6 @@
 				<cfif IsArray( arguments.postVars[ key ] )>
 					<cfloop from="1" to="#ArrayLen( arguments.postVars[ key ] )#" index="i">
 						<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ][ i ]#" />
-						<cfhttpparam type name="#key#" value="#arguments.postVars[ key ][ i ]#" />
 					</cfloop>
 				<cfelse>
 					<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ]#" />
