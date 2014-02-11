@@ -692,11 +692,11 @@
 
 		<cfhttp url       = "#_getRestUrl( arguments.uri, arguments.domain )#"
 		        method    = "#arguments.httpMethod#"
-		        username  = "api"
-		        password  = "#_getApiKey()#"
 		        timeout   = "#_getHttpTimeout()#"
 		        result    = "httpResult"
 		        multipart = "#( StructCount( arguments.files) gt 0 )#">
+
+		    <cfhttpparam type="header" name="Authorization" value="Basic #ToBase64(  'api:#_getApiKey()#' )#" />
 
 			<cfloop collection="#arguments.postVars#" item="key">
 				<cfif IsArray( arguments.postVars[ key ] )>
