@@ -46,19 +46,19 @@
 			var result   = "";
 			var files    = {};
 			var postVars = {
-				  from    = arguments.from
-				, to      = arguments.to
-				, subject = arguments.subject
-				, text    = arguments.text
-				, html    = arguments.html
+				  "from"    = arguments.from
+				, "to"      = arguments.to
+				, "subject" = arguments.subject
+				, "text"    = arguments.text
+				, "html"    = arguments.html
 			};
 
 			if ( Len( Trim( arguments.cc ) ) ) {
-				postVars.cc = arguments.cc;
+				postVars[ "cc" ] = arguments.cc;
 			}
 
 			if ( Len( Trim( arguments.bcc ) ) ) {
-				postVars.bcc = arguments.bcc;
+				postVars[ "bcc" ] = arguments.bcc;
 			}
 
 			if ( _getForceTestMode() or arguments.testMode ) {
