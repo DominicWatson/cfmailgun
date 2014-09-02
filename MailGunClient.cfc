@@ -2,18 +2,18 @@
 
 <!--- CONSTRUCTOR --->
 	<cffunction name="init" access="public" returntype="any" output="false">
-		<cfargument name="mailgunApiKey" type="string"  required="true" />
-		<cfargument name="defaultDomain" type="string"  required="false" default="" />
-		<cfargument name="baseUrl"       type="string"  required="false" default="https://api.mailgun.net/v2" />
-		<cfargument name="forceTestMode" type="boolean" required="false" default="false" />
-		<cfargument name="httpTimeout"   type="numeric" required="false" default="60" />
+		<cfargument name="mailgunApiKey"        type="string"  required="true" />
+		<cfargument name="mailgunDefaultDomain" type="string"  required="false" default="" />
+		<cfargument name="mailgunBaseUrl"       type="string"  required="false" default="https://api.mailgun.net/v2" />
+		<cfargument name="mailgunForceTestMode" type="boolean" required="false" default="false" />
+		<cfargument name="mailgunHttpTimeout"   type="numeric" required="false" default="60" />
 
 		<cfscript>
 			_setApiKey( arguments.mailgunApiKey  );
-			_setDefaultDomain( arguments.defaultDomain );
-			_setForceTestMode( arguments.forceTestMode );
-			_setBaseUrl( arguments.baseUrl );
-			_setHttpTimeout( arguments.httpTimeout );
+			_setDefaultDomain( arguments.mailgunDefaultDomain );
+			_setForceTestMode( arguments.mailgunForceTestMode );
+			_setBaseUrl( arguments.mailgunBaseUrl );
+			_setHttpTimeout( arguments.mailgunHttpTimeout );
 
 			return this;
 		</cfscript>
