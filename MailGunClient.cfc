@@ -2,14 +2,14 @@
 
 <!--- CONSTRUCTOR --->
 	<cffunction name="init" access="public" returntype="any" output="false">
-		<cfargument name="apiKey"        type="string"  required="true" />
+		<cfargument name="mailgunApiKey" type="string"  required="true" />
 		<cfargument name="defaultDomain" type="string"  required="false" default="" />
 		<cfargument name="baseUrl"       type="string"  required="false" default="https://api.mailgun.net/v2" />
 		<cfargument name="forceTestMode" type="boolean" required="false" default="false" />
 		<cfargument name="httpTimeout"   type="numeric" required="false" default="60" />
 
 		<cfscript>
-			_setApiKey( arguments.apiKey  );
+			_setApiKey( arguments.mailgunApiKey  );
 			_setDefaultDomain( arguments.defaultDomain );
 			_setForceTestMode( arguments.forceTestMode );
 			_setBaseUrl( arguments.baseUrl );
@@ -701,30 +701,30 @@
 			<cfloop collection="#arguments.postVars#" item="key">
 				<cfif IsArray( arguments.postVars[ key ] )>
 					<cfloop from="1" to="#ArrayLen( arguments.postVars[ key ] )#" index="i">
-						<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ][ i ]#" />
+						<cfhttpparam type="formfield" name="#lcase(key)#" value="#arguments.postVars[ key ][ i ]#" />
 					</cfloop>
 				<cfelse>
-					<cfhttpparam type="formfield" name="#key#" value="#arguments.postVars[ key ]#" />
+					<cfhttpparam type="formfield" name="#lcase(key)#" value="#arguments.postVars[ key ]#" />
 				</cfif>
 			</cfloop>
 
 			<cfloop collection="#arguments.getVars#" item="key">
 				<cfif IsArray( arguments.getVars[ key ] )>
 					<cfloop from="1" to="#ArrayLen( arguments.getVars[ key ] )#" index="i">
-						<cfhttpparam type="url" name="#key#" value="#arguments.getVars[ key ][ i ]#" />
+						<cfhttpparam type="url" name="#lcase(key)#" value="#arguments.getVars[ key ][ i ]#" />
 					</cfloop>
 				<cfelse>
-					<cfhttpparam type="url" name="#key#" value="#arguments.getVars[ key ]#" />
+					<cfhttpparam type="url" name="#lcase(key)#" value="#arguments.getVars[ key ]#" />
 				</cfif>
 			</cfloop>
 
 			<cfloop collection="#arguments.files#" item="key">
 				<cfif IsArray( arguments.files[ key ] )>
 					<cfloop from="1" to="#ArrayLen( arguments.files[ key ] )#" index="i">
-						<cfhttpparam type="file" name="#key#" file="#arguments.files[ key ][i]#" />
+						<cfhttpparam type="file" name="#lcase(key)#" file="#arguments.files[ key ][i]#" />
 					</cfloop>
 				<cfelse>
-					<cfhttpparam type="file" name="#key#" file="#arguments.files[ key ]#" />
+					<cfhttpparam type="file" name="#lcase(key)#" file="#arguments.files[ key ]#" />
 				</cfif>
 			</cfloop>
 		</cfhttp>
