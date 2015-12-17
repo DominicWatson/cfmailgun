@@ -78,7 +78,7 @@
 			}
 
 			if ( IsDate( arguments.deliveryTime ) ) {
-				postVars[ "o:deliverytime" ] = _dateFormat( arguments.deliveryTime );
+				postVars[ "o:deliverytime" ] = _dateFormatter( arguments.deliveryTime );
 			}
 
 			if ( IsBoolean( arguments.tracking ) ) {
@@ -840,7 +840,7 @@
 		         errorcode = "#arguments.errorCode#" />
 	</cffunction>
 
-	<cffunction name="_dateFormat" access="public" returntype="any" output="false">
+	<cffunction name="_dateFormatter" access="public" returntype="any" output="false">
 		<cfargument name="theDate" type="date" required="true" />
 
 		<cfscript>
