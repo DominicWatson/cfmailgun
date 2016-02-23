@@ -96,7 +96,7 @@
 			}
 
 			for( var key in arguments.customHeaders ){
-				postVars[ "h:X-#key#" ] = arguments.customHeaders[ key ];
+				postVars[ "h:#key#" ] = arguments.customHeaders[ key ];
 			}
 
 			for( var key in arguments.customVariables ){
